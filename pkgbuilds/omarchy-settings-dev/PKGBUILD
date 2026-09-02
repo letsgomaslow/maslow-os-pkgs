@@ -1,7 +1,7 @@
 # Maintainer: Ryan Hughes <ryan@omarchy.org>
 pkgname='omarchy-settings-dev'
 pkgver=4.0.0.r847.g4de185b
-pkgrel=1
+pkgrel=2
 _pkgver_base=4.0.0
 _pkgver_base_tag=v3.8.2
 pkgdesc='Maslow OS defaults and branded assets powered by the Omarchy engine (maslow branch tip)'
@@ -325,8 +325,6 @@ EOF
   install -Dm644 logo.svg "$pkgdir/usr/share/omarchy/logo.svg"
   install -Dm644 icon.txt "$pkgdir/usr/share/omarchy/icon.txt"
   install -Dm644 icon.png "$pkgdir/usr/share/omarchy/icon.png"
-  install -Dm644 maslow-version "$pkgdir/usr/share/omarchy/maslow-version"
-
   # Canonical Maslow product metadata and assets live in their own additive
   # namespace. Omarchy's package and runtime paths remain compatibility APIs.
   install -Dm644 branding/product.json "$pkgdir/usr/share/maslow-os/product.json"

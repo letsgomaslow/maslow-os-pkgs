@@ -15,9 +15,7 @@ Only `omarchy-dev` and `omarchy-settings-dev` source the Maslow OS `maslow`
 branch during the preview milestone. Their package names, dependencies, internal
 paths, and service identifiers remain compatible with Omarchy.
 
-The settings package installs Maslow branding, Manrope and its OFL license,
-`/usr/share/omarchy/maslow-version`, and a branded `/etc/os-release`. It retains
-the Omarchy engine version independently at `/usr/share/omarchy/version`.
+The runtime package owns `/usr/share/omarchy/maslow-version` alongside the independent Omarchy engine version at `/usr/share/omarchy/version`. The settings package installs Maslow branding, canonical metadata under `/usr/share/maslow-os`, Manrope and its OFL license, and a branded `/etc/os-release`.
 
 No package from this branch is a signed public release. Publishing requires
 Maslow-owned signing keys, a package repository, mirrors, checksums, release
