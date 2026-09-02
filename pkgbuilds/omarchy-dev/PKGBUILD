@@ -41,6 +41,14 @@ depends=(
   'pipewire'
   'gnome-keyring'
 
+  # Spoken setup, login, and desktop accessibility are Maslow OS runtime
+  # invariants rather than optional recommendations.
+  'espeakup'
+  'espeak-ng'
+  'speech-dispatcher'
+  'orca'
+  'qt6-speech'
+
   # Required by omarchy-* scripts and omarchy-shell
   'gum'
   'jq'
