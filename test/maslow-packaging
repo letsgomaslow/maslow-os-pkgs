@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+runtime="$root/pkgbuilds/omarchy-dev/PKGBUILD"
+settings="$root/pkgbuilds/omarchy-settings-dev/PKGBUILD"
+
+assert_contains() {
+  local file=$1 pattern=$2 description=$3
+  if ! grep -Fq -- "$pattern" "$file"; then
+    printf 'FAIL: %s\n' "$description" >&2
+    exit 1
+  fi
+}
+
+assert_contains "$runtime" 'letsgomaslow/maslow-os.git#branch=maslow' 'runtime must source the Maslow product branch'
+assert_contains "$runtime" 'usr/share/omarchy/maslow-version' 'runtime must install the Maslow version'
+assert_contains "$settings" 'letsgomaslow/maslow-os.git#branch=maslow' 'settings must source the Maslow product branch'
+assert_contains "$settings" 'NAME="Maslow OS"' 'os-release must name Maslow OS'
+assert_contains "$settings" 'ID=maslow' 'os-release must use the maslow ID'
+assert_contains "$settings" 'ID_LIKE=arch' 'os-release must retain Arch compatibility'
+assert_contains "$settings" 'LOGO=maslow-os' 'os-release must select the Maslow icon'
+assert_contains "$settings" 'Manrope-VariableFont_wght.ttf' 'settings must install Manrope'
+assert_contains "$settings" 'Manrope-OFL.txt' 'settings must install the Manrope license'
+
+if grep -Fq 'pkgname='"'"'maslow' "$runtime" "$settings"; then
+  printf 'FAIL: package names must remain compatible with Omarchy\n' >&2
+  exit 1
+fi
+
+printf 'Maslow downstream package checks passed.\n'

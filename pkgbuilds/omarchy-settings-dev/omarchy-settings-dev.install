@@ -1,5 +1,5 @@
 _etc_overrides_apply() {
-  echo "Applying Omarchy etc-overrides..."
+  echo "Applying Maslow OS etc-overrides..."
 
   # Ensure parent dirs exist. cups-browsed may not be installed yet during ISO
   # bootstrap; do not create /etc/cups/cups-browsed.conf before the package is
@@ -10,7 +10,7 @@ _etc_overrides_apply() {
   # Users who customize /etc/os-release, /etc/plymouth/plymouthd.conf (theme
   # switch), /etc/cups/cups-browsed.conf, /etc/cups/cups-files.conf, /etc/nsswitch.conf,
   # /etc/security/faillock.conf, or /etc/skel/.bashrc WILL have their changes
-  # reset to Omarchy defaults each time omarchy-settings-dev is upgraded. This is
+  # reset to Maslow OS defaults each time omarchy-settings-dev is upgraded. This is
   # the trade-off of routing upstream-owned paths through etc-overrides instead
   # of pacman backup=().
   rm -f /etc/os-release

@@ -1,4 +1,12 @@
-# Omarchy Package Repository
+# Maslow OS Package Repository
+
+This public downstream of `omacom/omarchy-pkgs` builds the unrenamed
+`omarchy` and `omarchy-settings` package families for Maslow OS. The `maslow`
+branch is the product branch; `master` remains an upstream mirror. The current
+preview milestone changes only the `-dev` packages and does not publish or sign
+a production repository. See [DOWNSTREAM.md](DOWNSTREAM.md) and [NOTICE](NOTICE).
+
+## Upstream package infrastructure
 
 Build system for the Omarchy Package Repository. Builds PKGBUILDs from local sources and AUR, signs them, and syncs to production.
 

@@ -3,7 +3,7 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [maslow]
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Validate Maslow downstream packaging
+        run: ./test/maslow-packaging
 
       # An Arch container for vercmp: version ordering has to be decided by
       # the same comparator pacman uses on users' machines.

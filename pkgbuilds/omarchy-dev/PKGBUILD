@@ -4,9 +4,9 @@ pkgver=4.0.0.r847.g4de185b
 pkgrel=1
 _pkgver_base=4.0.0
 _pkgver_base_tag=v3.8.2
-pkgdesc='Beautiful, modern, and opinionated Arch Linux by DHH (quattro branch tip)'
+pkgdesc='Maslow OS runtime powered by the Omarchy engine (maslow branch tip)'
 arch=('any')
-url='https://github.com/basecamp/omarchy'
+url='https://github.com/letsgomaslow/maslow-os'
 license=('MIT')
 provides=('omarchy')
 conflicts=('omarchy')
@@ -59,13 +59,13 @@ makedepends=(
   'git'
 )
 
-# Source: quattro branch tip by default; set OMARCHY_SRC=/path/to/checkout
+# Source: Maslow product branch tip by default; set OMARCHY_SRC=/path/to/checkout
 # to build from a local source tree instead (mirrors omarchy-zsh/omarchy-fish DX).
 if [[ -n "${OMARCHY_SRC:-}" ]]; then
   source=()
   sha256sums=()
 else
-  source=("omarchy::git+https://github.com/basecamp/omarchy.git#branch=quattro")
+  source=("omarchy::git+https://github.com/letsgomaslow/maslow-os.git#branch=maslow")
   sha256sums=('SKIP')
 fi
 
@@ -145,4 +145,5 @@ package() {
 
   # Runtime version file.
   install -Dm644 version "$pkgdir/usr/share/omarchy/version"
+  install -Dm644 maslow-version "$pkgdir/usr/share/omarchy/maslow-version"
 }
