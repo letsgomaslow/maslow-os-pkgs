@@ -11,7 +11,7 @@ This repository is the package-build downstream for Maslow OS, based on
 
 ## Preview scope
 
-Only `omarchy-dev` and `omarchy-settings-dev` source the Maslow OS `maslow`
+Only `omarchy-dev` and `omarchy-settings-dev` source the Maslow OS `main`
 branch during the preview milestone. Their package names, dependencies, internal
 paths, and service identifiers remain compatible with Omarchy.
 
