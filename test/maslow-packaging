@@ -14,15 +14,31 @@ assert_contains() {
   fi
 }
 
+assert_absent() {
+  local file=$1 pattern=$2 description=$3
+  if grep -Fq -- "$pattern" "$file"; then
+    printf 'FAIL: %s\n' "$description" >&2
+    exit 1
+  fi
+}
+
 assert_contains "$runtime" 'letsgomaslow/maslow-os.git#branch=maslow' 'runtime must source the Maslow product branch'
 assert_contains "$runtime" 'usr/share/omarchy/maslow-version' 'runtime must install the Maslow version'
+assert_absent "$settings" 'usr/share/omarchy/maslow-version' 'settings must not duplicate the runtime-owned Maslow version'
+assert_contains "$runtime" "'espeakup'" 'runtime must include spoken console support'
+assert_contains "$runtime" "'orca'" 'runtime must include spoken desktop support'
+assert_contains "$runtime" "'qt6-speech'" 'runtime must include spoken SDDM support'
 assert_contains "$settings" 'letsgomaslow/maslow-os.git#branch=maslow' 'settings must source the Maslow product branch'
 assert_contains "$settings" 'NAME="Maslow OS"' 'os-release must name Maslow OS'
 assert_contains "$settings" 'ID=maslow' 'os-release must use the maslow ID'
 assert_contains "$settings" 'ID_LIKE=arch' 'os-release must retain Arch compatibility'
 assert_contains "$settings" 'LOGO=maslow-os' 'os-release must select the Maslow icon'
+assert_contains "$settings" 'tree/main/manual' 'os-release documentation must follow the product branch'
+assert_contains "$settings" 'usr/share/maslow-os/product.json' 'settings must install canonical product metadata'
+assert_contains "$settings" 'maslow-mark-gradient.svg' 'settings must install the approved Gradient Bridge mark'
 assert_contains "$settings" 'Manrope-VariableFont_wght.ttf' 'settings must install Manrope'
 assert_contains "$settings" 'Manrope-OFL.txt' 'settings must install the Manrope license'
+assert_contains "$settings" 'maslow-orca.service' 'settings must install the spoken desktop unit'
 
 if grep -Fq 'pkgname='"'"'maslow' "$runtime" "$settings"; then
   printf 'FAIL: package names must remain compatible with Omarchy\n' >&2

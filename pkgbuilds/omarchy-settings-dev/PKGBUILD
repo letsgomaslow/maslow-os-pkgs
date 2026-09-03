@@ -1,7 +1,7 @@
 # Maintainer: Ryan Hughes <ryan@omarchy.org>
 pkgname='omarchy-settings-dev'
 pkgver=4.0.0.r847.g4de185b
-pkgrel=1
+pkgrel=2
 _pkgver_base=4.0.0
 _pkgver_base_tag=v3.8.2
 pkgdesc='Maslow OS defaults and branded assets powered by the Omarchy engine (maslow branch tip)'
@@ -72,7 +72,7 @@ backup=(
 )
 
 optdepends=(
-  'omarchy-dev: Full Omarchy desktop (quattro branch tip)'
+  'omarchy-dev: Maslow OS desktop powered by the compatible Omarchy engine'
   'inxi: System information for omarchy-debug'
   'fastfetch: System information for omarchy-upload-log'
   'limine: Bootloader the shipped /etc/mkinitcpio.conf.d/ and /etc/limine-entry-tool.d/ drop-ins are for'
@@ -175,6 +175,7 @@ package() {
   install -Dm644 default/systemd/user/omarchy-tailscale-receive.service "$pkgdir/usr/lib/systemd/user/omarchy-tailscale-receive.service"
   install -Dm644 default/systemd/user/omarchy-fcitx5.service "$pkgdir/usr/lib/systemd/user/omarchy-fcitx5.service"
   install -Dm644 default/systemd/user/omarchy-crash-watch.service "$pkgdir/usr/lib/systemd/user/omarchy-crash-watch.service"
+  install -Dm644 default/systemd/user/maslow-orca.service "$pkgdir/usr/lib/systemd/user/maslow-orca.service"
   # Marks app.slice (and only app.slice) as a systemd-oomd kill candidate, so
   # memory pressure costs one app scope instead of the compositor session.
   # Thresholds live in etc/systemd/oomd.conf.d/10-omarchy.conf.
@@ -216,7 +217,7 @@ BUILD_ID="$pkgver"
 VERSION_ID="$maslow_version"
 ANSI_COLOR="38;2;109;196;173"
 HOME_URL="https://maslow.ai/"
-DOCUMENTATION_URL="https://github.com/letsgomaslow/maslow-os/tree/maslow/manual"
+DOCUMENTATION_URL="https://github.com/letsgomaslow/maslow-os/tree/main/manual"
 SUPPORT_URL="https://github.com/letsgomaslow/maslow-os/issues"
 BUG_REPORT_URL="https://github.com/letsgomaslow/maslow-os/issues"
 LOGO=maslow-os
@@ -324,16 +325,18 @@ EOF
   install -Dm644 logo.svg "$pkgdir/usr/share/omarchy/logo.svg"
   install -Dm644 icon.txt "$pkgdir/usr/share/omarchy/icon.txt"
   install -Dm644 icon.png "$pkgdir/usr/share/omarchy/icon.png"
-  install -Dm644 maslow-version "$pkgdir/usr/share/omarchy/maslow-version"
+  # Canonical Maslow product metadata and assets live in their own additive
+  # namespace. Omarchy's package and runtime paths remain compatibility APIs.
+  install -Dm644 branding/product.json "$pkgdir/usr/share/maslow-os/product.json"
+  install -Dm644 branding/design-tokens.json "$pkgdir/usr/share/maslow-os/branding/design-tokens.json"
+  install -Dm644 branding/logos/maslow-mark-gradient.svg \
+    "$pkgdir/usr/share/maslow-os/branding/logos/maslow-mark-gradient.svg"
+  install -Dm644 branding/logos/maslow-mark-dark.svg \
+    "$pkgdir/usr/share/maslow-os/branding/logos/maslow-mark-dark.svg"
+  install -Dm644 branding/logos/maslow-mark-white.svg \
+    "$pkgdir/usr/share/maslow-os/branding/logos/maslow-mark-white.svg"
 
-  # Canonical Maslow brand assets used by graphical surfaces and downstream QA.
-  install -Dm644 branding/design-tokens.json "$pkgdir/usr/share/omarchy/branding/design-tokens.json"
-  install -Dm644 branding/logos/maslow-gradient-bridge.svg \
-    "$pkgdir/usr/share/omarchy/branding/logos/maslow-gradient-bridge.svg"
-  install -Dm644 branding/logos/maslow-gradient-bridge-stacked.svg \
-    "$pkgdir/usr/share/omarchy/branding/logos/maslow-gradient-bridge-stacked.svg"
-
-  # Standard icon-theme locations so os-release's LOGO=omarchy resolves in
+  # Standard icon-theme locations so os-release's LOGO=maslow-os resolves in
   # desktop/system-info tools that use the freedesktop icon lookup rules.
   install -Dm644 icon.png "$pkgdir/usr/share/pixmaps/omarchy.png"
   install -Dm644 icon.png "$pkgdir/usr/share/icons/hicolor/256x256/apps/omarchy.png"
