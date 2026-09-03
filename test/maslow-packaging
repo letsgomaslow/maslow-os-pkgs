@@ -22,13 +22,13 @@ assert_absent() {
   fi
 }
 
-assert_contains "$runtime" 'letsgomaslow/maslow-os.git#branch=maslow' 'runtime must source the Maslow product branch'
+assert_contains "$runtime" 'letsgomaslow/maslow-os.git#branch=main' 'runtime must source the Maslow public product branch'
 assert_contains "$runtime" 'usr/share/omarchy/maslow-version' 'runtime must install the Maslow version'
 assert_absent "$settings" 'usr/share/omarchy/maslow-version' 'settings must not duplicate the runtime-owned Maslow version'
 assert_contains "$runtime" "'espeakup'" 'runtime must include spoken console support'
 assert_contains "$runtime" "'orca'" 'runtime must include spoken desktop support'
 assert_contains "$runtime" "'qt6-speech'" 'runtime must include spoken SDDM support'
-assert_contains "$settings" 'letsgomaslow/maslow-os.git#branch=maslow' 'settings must source the Maslow product branch'
+assert_contains "$settings" 'letsgomaslow/maslow-os.git#branch=main' 'settings must source the Maslow public product branch'
 assert_contains "$settings" 'NAME="Maslow OS"' 'os-release must name Maslow OS'
 assert_contains "$settings" 'ID=maslow' 'os-release must use the maslow ID'
 assert_contains "$settings" 'ID_LIKE=arch' 'os-release must retain Arch compatibility'

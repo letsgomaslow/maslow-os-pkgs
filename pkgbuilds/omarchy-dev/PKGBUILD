@@ -73,7 +73,7 @@ if [[ -n "${OMARCHY_SRC:-}" ]]; then
   source=()
   sha256sums=()
 else
-  source=("omarchy::git+https://github.com/letsgomaslow/maslow-os.git#branch=maslow")
+  source=("omarchy::git+https://github.com/letsgomaslow/maslow-os.git#branch=main")
   sha256sums=('SKIP')
 fi
 
