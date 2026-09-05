@@ -3,11 +3,12 @@
 # Maintainer:  Chmouel Boudjnah <chmouel@chmouel.com>
 pkgname=openai-codex-bin
 pkgver=0.152.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Arch Linux package for OpenAI's Codex CLI - Auto Updated"
 arch=('x86_64' 'aarch64')
 url="https://github.com/openai/codex"
-license=('Apache')
+license=('Apache-2.0')
+options=('!strip' '!debug')
 provides=('openai-codex')
 conflicts=('openai-codex' 'openai-codex-autoup-bin')
 replaces=('openai-codex-autoup-bin')
@@ -16,6 +17,13 @@ optdepends=(
   'ripgrep: accelerated large-repo search'
 )
 keywords=('codex' 'openai' 'cli' 'ai' 'machine-learning' 'chatgpt')
+
+source=(
+  "codex-${pkgver}-LICENSE::https://raw.githubusercontent.com/openai/codex/rust-v${pkgver}/LICENSE"
+  "codex-${pkgver}-NOTICE::https://raw.githubusercontent.com/openai/codex/rust-v${pkgver}/NOTICE"
+)
+sha256sums=('d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc'
+            '9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915')
 
 source_x86_64=(
   "codex-${pkgver}-x86_64.tar.gz::https://github.com/openai/codex/releases/download/rust-v${pkgver}/codex-x86_64-unknown-linux-musl.tar.gz"
@@ -33,6 +41,9 @@ source_aarch64=(
 
 package() {
   cd "$srcdir" || exit
+
+  install -Dm644 "codex-${pkgver}-LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "codex-${pkgver}-NOTICE" "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
 
   if [[ "$CARCH" == "x86_64" ]]; then
     install -Dm755 "codex-x86_64-unknown-linux-musl" "$pkgdir/usr/bin/codex"

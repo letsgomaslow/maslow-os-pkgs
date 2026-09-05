@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+# Run in an isolated Linux guest/container with the package installed.
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+mkdir -p "$work/project/hermes_cli" "$work/hostile/hermes_cli"
+printf '%s\n' 'raise RuntimeError("UNTRUSTED CWD MODULE LOADED")' > "$work/project/hermes_cli/__init__.py"
+cp "$work/project/hermes_cli/__init__.py" "$work/hostile/hermes_cli/__init__.py"
+cd "$work/project"
+output=$(PYTHONPATH="$work/hostile" PYTHONHOME="$work/missing-python" /usr/bin/hermes --version)
+grep -qF 'Hermes Agent v0.21.0' <<< "$output"
+# -P changes import search, not the actual working directory. Exercise that
+# exact interpreter mode separately so the isolation cannot hide a chdir fix.
+actual=$(PYTHONPATH=/opt/hermes-agent/app /opt/hermes-agent/python/bin/python3 -s -P -c 'import os; print(os.getcwd())')
+[[ $actual == "$work/project" ]]
+! grep -qE '(^|[;&])[[:space:]]*cd[[:space:]]' /usr/bin/hermes
+printf 'Packaged Hermes rejects hostile Python paths and retains project cwd.\n'

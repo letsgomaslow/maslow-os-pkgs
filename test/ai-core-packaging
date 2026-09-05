@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+for name in openai-codex-bin claude-code hermes-agent; do
+  bash -n "$root/pkgbuilds/$name/PKGBUILD"
+  ! grep -q "'SKIP'" "$root/pkgbuilds/$name/PKGBUILD"
+done
+grep -qF 'usr/bin/codex' "$root/pkgbuilds/openai-codex-bin/PKGBUILD"
+grep -qF 'https://raw.githubusercontent.com/openai/codex/rust-v${pkgver}/LICENSE' "$root/pkgbuilds/openai-codex-bin/PKGBUILD"
+grep -qF 'https://raw.githubusercontent.com/openai/codex/rust-v${pkgver}/NOTICE' "$root/pkgbuilds/openai-codex-bin/PKGBUILD"
+grep -qF 'usr/share/licenses/$pkgname/LICENSE' "$root/pkgbuilds/openai-codex-bin/PKGBUILD"
+grep -qF 'usr/share/licenses/$pkgname/NOTICE' "$root/pkgbuilds/openai-codex-bin/PKGBUILD"
+grep -qF 'usr/bin/claude' "$root/pkgbuilds/claude-code/PKGBUILD"
+grep -qF 'usr/bin/hermes' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+grep -qF -- '--frozen --no-dev --no-default-groups --no-emit-project' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+grep -qF -- '--require-hashes' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+grep -qF 'unset PYTHONHOME' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+grep -qF 'export PYTHONPATH=/opt/hermes-agent/app' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+grep -qF 'python3 -s -P -m hermes_cli.main' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+! grep -qE '\[all\]|--all-extras|mise use' "$root/pkgbuilds/hermes-agent/PKGBUILD"
+printf 'AI core recipe integrity checks passed.\n'
