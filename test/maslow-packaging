@@ -24,6 +24,8 @@ assert_absent() {
 
 assert_contains "$runtime" 'letsgomaslow/maslow-os.git#branch=main' 'runtime must source the Maslow public product branch'
 assert_contains "$runtime" 'usr/share/omarchy/maslow-version' 'runtime must install the Maslow version'
+assert_contains "$runtime" '01-maslow-runtime-hold.hook' 'runtime package must install the Maslow preview runtime hold'
+assert_contains "$root/pkgbuilds/omarchy/PKGBUILD" '01-maslow-runtime-hold.hook' 'stable-compatible runtime recipe must install the Maslow preview runtime hold'
 assert_absent "$settings" 'usr/share/omarchy/maslow-version' 'settings must not duplicate the runtime-owned Maslow version'
 assert_contains "$runtime" "'espeakup'" 'runtime must include spoken console support'
 assert_contains "$runtime" "'orca'" 'runtime must include spoken desktop support'
