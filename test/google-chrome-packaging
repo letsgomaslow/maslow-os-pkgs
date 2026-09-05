@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -euo pipefail
+
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+package_dir="$root/pkgbuilds/google-chrome"
+pkgbuild="$package_dir/PKGBUILD"
+metadata="$package_dir/.omarchy/package.json"
+provenance="$package_dir/PROVENANCE.md"
+
+bash -n "$pkgbuild" "$package_dir/google-chrome-stable.sh" "$package_dir/google-chrome.install"
+! grep -q "'SKIP'" "$pkgbuild"
+
+(
+  cd "$package_dir"
+  source ./PKGBUILD
+
+  [[ $pkgname == "google-chrome" ]]
+  [[ $pkgver == "152.0.7977.82" ]]
+  [[ ${arch[*]} == *"x86_64"* ]]
+  [[ ${license[*]} == *"custom:chrome"* ]]
+  [[ ${source_x86_64[0]} == "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_152.0.7977.82-1_amd64.deb" ]]
+  [[ ${sha512sums_x86_64[0]} == "867c023deb01fb838aa6a53291a617a9e18b8ff147a35c8b4af77956d633418544c49fadfd8e53a767d0a23a1f75e3b11e7ee32695c3242c24c65aa2b23791d7" ]]
+
+  for dependency in alsa-lib gtk3 libcups libxss libxtst nss ttf-liberation xdg-utils; do
+    [[ " ${depends[*]} " == *" $dependency "* ]]
+  done
+)
+
+[[ $(sha512sum "$package_dir/eula_text.html" | awk '{print $1}') == "aa346ffe6adf3b0402abdf8f0abe6ec72c93238099af3a7c0dde86c6400792f4893a93325178746854564ba39ea5a3a6824ecf87277bf1a47c3c4e0a5853c474" ]]
+[[ $(sha512sum "$package_dir/google-chrome-stable.sh" | awk '{print $1}') == "de02b498a4b5b93e21622c8dba57befe795d733a04656be911cc38e28bfef0e20470450f44be523bbde8d4de28f79c10434846ca01fc2a2f4e67707b79332f94" ]]
+
+jq -e '
+  .source == "aur"
+  and .sync == false
+  and .release_ring == "fast"
+  and .upstream_commit == "b276fd5c9892f0902c21139c31edf75667a8620f"
+' "$metadata" >/dev/null
+
+grep -qF 'usr/share/applications/google-chrome.desktop' "$pkgbuild"
+grep -qF 'StartupWMClass=Google-chrome' "$pkgbuild"
+grep -qF 'usr/share/licenses/google-chrome/eula_text.html' "$pkgbuild"
+grep -qF 'b276fd5c9892f0902c21139c31edf75667a8620f' "$provenance"
+grep -qF 'internal local-source test ISO' "$provenance"
+
+printf 'Google Chrome pinned packaging checks passed.\n'

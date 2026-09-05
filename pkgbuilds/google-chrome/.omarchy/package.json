@@ -1,0 +1,6 @@
+{
+  "source": "aur",
+  "sync": false,
+  "release_ring": "fast",
+  "upstream_commit": "b276fd5c9892f0902c21139c31edf75667a8620f"
+}
