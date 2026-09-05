@@ -36,6 +36,7 @@ depends=(
   'curl'
   'gum'
   'hicolor-icon-theme'
+  'maslow-curated-plugins'
   'plymouth'
 )
 

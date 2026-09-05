@@ -1,0 +1,91 @@
+# Maintainer: Maslow OS <support@maslow.ai>
+pkgname='maslow-curated-plugins'
+pkgver=1
+pkgrel=1
+pkgdesc='Reviewed, updateable Omarchy plugins curated for Maslow OS fresh installs'
+arch=('any')
+url='https://github.com/letsgomaslow/maslow-os'
+license=('MIT')
+makedepends=('git')
+
+_omadock_commit='0864ef1e0810535b2db93c8976e0386b66418af4'
+_app_launcher_commit='ebf72cb8ca0059a9832da0ad3838fae44fc14769'
+_omadock_origin='https://github.com/thepathless/omadock.git'
+_app_launcher_origin='https://github.com/Tyrsolution/omarchy-app-launcher.git'
+
+# These are build-time VCS sources, pinned to reviewed immutable commits. The
+# package seeds their Git checkouts in /etc/skel; installation never clones a
+# mutable upstream branch.
+source=(
+  "omadock::git+${_omadock_origin}#commit=${_omadock_commit}"
+  "tyrsolution.app-launcher::git+${_app_launcher_origin}#commit=${_app_launcher_commit}"
+  'omadock-maslow-display-branding.patch'
+)
+sha256sums=('SKIP' 'SKIP' 'fc838eec07e931bc3e5a7a172eba62044a431ef93e775a8823f99e2981a148a6')
+
+fail() {
+  printf '%s\n' "maslow-curated-plugins: $*" >&2
+  return 1
+}
+
+validate_upstream_checkout() {
+  local source_dir="$1" id="$2" author="$3" origin="$4" commit="$5" resolved_origin
+
+  [[ $(git -C "$source_dir" rev-parse HEAD) == "$commit" ]] ||
+    fail "$id is not checked out at its reviewed commit"
+  resolved_origin=$(git -C "$source_dir" remote get-url origin) ||
+    fail "$id source checkout has no origin"
+  if [[ $resolved_origin != "$origin" ]]; then
+    [[ -d $resolved_origin ]] || fail "$id has an unexpected origin"
+    [[ $(git --git-dir="$resolved_origin" remote get-url origin) == "$origin" ]] ||
+      fail "$id source cache has an unexpected origin"
+  fi
+  [[ -z $(git -C "$source_dir" status --porcelain) ]] ||
+    fail "$id source checkout is not clean"
+  [[ -f $source_dir/manifest.json && -f $source_dir/LICENSE ]] ||
+    fail "$id must retain its upstream manifest and MIT license"
+  grep -Fqx "  \"id\": \"$id\"," "$source_dir/manifest.json" ||
+    fail "$id manifest id changed unexpectedly"
+  grep -Fqx "  \"author\": \"$author\"," "$source_dir/manifest.json" ||
+    fail "$id manifest author changed unexpectedly"
+  grep -Fqx '  "license": "MIT",' "$source_dir/manifest.json" ||
+    fail "$id manifest license changed unexpectedly"
+  grep -Fqx 'MIT License' "$source_dir/LICENSE" ||
+    fail "$id must retain the MIT license text"
+}
+
+package() {
+  local plugins_dir="$pkgdir/etc/skel/.config/omarchy/plugins"
+  local target
+
+  validate_upstream_checkout "$srcdir/omadock" 'omadock' 'thepathless' \
+    "$_omadock_origin" "$_omadock_commit"
+  validate_upstream_checkout "$srcdir/tyrsolution.app-launcher" \
+    'tyrsolution.app-launcher' 'Tyrsolution' "$_app_launcher_origin" "$_app_launcher_commit"
+
+  install -d "$plugins_dir"
+  cp -a "$srcdir/omadock" "$plugins_dir/omadock"
+  cp -a "$srcdir/tyrsolution.app-launcher" "$plugins_dir/tyrsolution.app-launcher"
+  git -C "$plugins_dir/omadock" remote set-url origin "$_omadock_origin"
+  git -C "$plugins_dir/tyrsolution.app-launcher" remote set-url origin "$_app_launcher_origin"
+
+  # Brand only Omadock's visible display strings. The manifest, license,
+  # origin, and plugin ID remain upstream. Commit the small downstream patch
+  # so omarchy-plugin-update can review and rebase it instead of leaving a
+  # dirty checkout that would block all upstream updates.
+  target="$plugins_dir/omadock"
+  git -C "$target" apply --check "$srcdir/omadock-maslow-display-branding.patch"
+  git -C "$target" apply "$srcdir/omadock-maslow-display-branding.patch"
+  git -C "$target" add Dock.qml .maslow-managed-branding.json
+  git -C "$target" -c user.name='Maslow OS' -c user.email='support@maslow.ai' \
+    commit --no-gpg-sign -m 'Apply Maslow dock display branding' >/dev/null
+  git -C "$target" branch -f maslow-managed HEAD
+  git -C "$target" checkout --quiet maslow-managed
+  [[ -z $(git -C "$target" status --porcelain) ]] ||
+    fail 'Maslow dock display branding must leave an updateable clean checkout'
+
+  # Keep the reviewed patch in the package for audits. The checkout's tracked
+  # marker is what tells omarchy-plugin-update to replay it after review.
+  install -Dm644 "$srcdir/omadock-maslow-display-branding.patch" \
+    "$pkgdir/usr/share/maslow-os/curated-plugins/omadock-maslow-display-branding.patch"
+}

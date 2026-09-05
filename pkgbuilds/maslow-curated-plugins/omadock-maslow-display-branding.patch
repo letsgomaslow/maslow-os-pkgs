@@ -1,0 +1,24 @@
+diff --git a/Dock.qml b/Dock.qml
+--- a/Dock.qml
++++ b/Dock.qml
+@@ -3408,9 +3408,9 @@ Item {
+         DockIconButton {
+           visible: root.showAppsButton
+           homeCenter: root.slotHomeCenter(0, 0, false)
+-          glyph: "\ue900"
++          glyph: "\ue90b"
+           glyphColor: root.dockForeground
+-          tooltip: "Omarchy"
++          tooltip: "Maslow OS"
+           onPressed: Quickshell.execDetached(["omarchy-menu", "toggle", "root"])
+           onMiddleClicked: Quickshell.execDetached(["omarchy-launch-terminal"])
+           onWheelScrolled: function(dir) { root.cycleWorkspace(dir) }
+diff --git a/.maslow-managed-branding.json b/.maslow-managed-branding.json
+new file mode 100644
+--- /dev/null
++++ b/.maslow-managed-branding.json
+@@ -0,0 +1,4 @@
++{
++  "id": "omadock",
++  "displayBranding": "maslow-dock-v1"
++}

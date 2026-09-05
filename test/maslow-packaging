@@ -5,6 +5,8 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 runtime="$root/pkgbuilds/omarchy-dev/PKGBUILD"
 settings="$root/pkgbuilds/omarchy-settings-dev/PKGBUILD"
+curated_plugins="$root/pkgbuilds/maslow-curated-plugins/PKGBUILD"
+curated_patch="$root/pkgbuilds/maslow-curated-plugins/omadock-maslow-display-branding.patch"
 
 assert_contains() {
   local file=$1 pattern=$2 description=$3
@@ -41,6 +43,23 @@ assert_contains "$settings" 'maslow-mark-gradient.svg' 'settings must install th
 assert_contains "$settings" 'Manrope-VariableFont_wght.ttf' 'settings must install Manrope'
 assert_contains "$settings" 'Manrope-OFL.txt' 'settings must install the Manrope license'
 assert_contains "$settings" 'maslow-orca.service' 'settings must install the spoken desktop unit'
+assert_contains "$settings" "'maslow-curated-plugins'" 'settings must install curated plugin defaults for fresh users'
+assert_contains "$root/pkgbuilds/omarchy-settings/PKGBUILD" "'maslow-curated-plugins'" 'stable-compatible settings must retain curated plugin defaults'
+assert_contains "$curated_plugins" "_omadock_commit='0864ef1e0810535b2db93c8976e0386b66418af4'" 'Omadock must use its reviewed immutable commit'
+assert_contains "$curated_plugins" "_app_launcher_commit='ebf72cb8ca0059a9832da0ad3838fae44fc14769'" 'App Launcher must use its reviewed immutable commit'
+assert_contains "$curated_plugins" 'git+${_omadock_origin}#commit=${_omadock_commit}' 'Omadock package source must be commit pinned'
+assert_contains "$curated_plugins" 'git+${_app_launcher_origin}#commit=${_app_launcher_commit}' 'App Launcher package source must be commit pinned'
+assert_contains "$curated_plugins" 'remote get-url origin' 'curated plugin package must preserve upstream origins'
+assert_contains "$curated_plugins" 'source cache has an unexpected origin' 'makepkg source caches must still resolve to the reviewed upstream origins'
+assert_contains "$curated_plugins" 'remote set-url origin' 'installed plugin checkouts must restore their official upstream origins'
+assert_contains "$curated_plugins" 'manifest.json && -f $source_dir/LICENSE' 'curated plugin package must retain upstream manifests and licenses'
+assert_contains "$curated_plugins" 'cp -a "$srcdir/omadock" "$plugins_dir/omadock"' 'Omadock must seed a git checkout in /etc/skel'
+assert_contains "$curated_plugins" 'cp -a "$srcdir/tyrsolution.app-launcher" "$plugins_dir/tyrsolution.app-launcher"' 'App Launcher must seed a git checkout in /etc/skel'
+assert_contains "$curated_plugins" 'git -C "$target" apply' 'dock display branding must be a reviewable patch'
+assert_contains "$curated_plugins" "commit --no-gpg-sign -m 'Apply Maslow dock display branding'" 'dock display branding must be committed for update compatibility'
+assert_contains "$curated_patch" 'glyph: "\ue90b"' 'dock patch must use the approved Maslow glyph'
+assert_contains "$curated_patch" 'tooltip: "Maslow OS"' 'dock patch must replace the Omarchy tooltip'
+assert_contains "$curated_patch" '"id": "omadock"' 'dock patch must identify managed display branding'
 
 if grep -Fq 'pkgname='"'"'maslow' "$runtime" "$settings"; then
   printf 'FAIL: package names must remain compatible with Omarchy\n' >&2
