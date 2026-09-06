@@ -1,7 +1,7 @@
 # Maintainer: Maslow OS <support@maslow.ai>
 pkgname='maslow-connect'
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Maslow-owned MCP connection bridge and agent plugin'
 arch=('any')
 url='https://github.com/letsgomaslow/maslow-connect'
@@ -10,7 +10,7 @@ depends=('nodejs>=22' 'libsecret' 'xdg-utils')
 makedepends=('git' 'pnpm')
 options=('!strip' '!debug')
 
-_commit='74147630003660a031b0cf159fff9965bb7e9b3b'
+_commit='a571a1c3e0b7889f9146666b11f0242f087b9524'
 
 # Release builds use an immutable source commit. Coordinated local-source ISO
 # builds set MASLOW_CONNECT_SRC to the exact reviewed checkout instead.
