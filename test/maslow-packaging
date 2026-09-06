@@ -7,6 +7,7 @@ runtime="$root/pkgbuilds/omarchy-dev/PKGBUILD"
 settings="$root/pkgbuilds/omarchy-settings-dev/PKGBUILD"
 curated_plugins="$root/pkgbuilds/maslow-curated-plugins/PKGBUILD"
 curated_patch="$root/pkgbuilds/maslow-curated-plugins/omadock-maslow-display-branding.patch"
+connect="$root/pkgbuilds/maslow-connect/PKGBUILD"
 
 assert_contains() {
   local file=$1 pattern=$2 description=$3
@@ -60,6 +61,18 @@ assert_contains "$curated_plugins" "commit --no-gpg-sign -m 'Apply Maslow dock d
 assert_contains "$curated_patch" 'glyph: "\ue90b"' 'dock patch must use the approved Maslow glyph'
 assert_contains "$curated_patch" 'tooltip: "Maslow OS"' 'dock patch must replace the Omarchy tooltip'
 assert_contains "$curated_patch" '"id": "omadock"' 'dock patch must identify managed display branding'
+assert_contains "$connect" "pkgname='maslow-connect'" 'Maslow Connect package name must be stable'
+assert_contains "$connect" "depends=('nodejs>=22' 'libsecret' 'xdg-utils')" 'Maslow Connect must declare its local runtime and secret-store dependencies'
+assert_contains "$connect" 'MASLOW_CONNECT_SRC' 'Maslow Connect must support an explicit local source checkout'
+assert_contains "$connect" "--exclude='./node_modules'" 'Maslow Connect local builds must exclude developer dependencies'
+assert_contains "$connect" 'CI=true pnpm install --frozen-lockfile' 'Maslow Connect package builds must install non-interactively'
+assert_contains "$connect" 'pnpm install --frozen-lockfile' 'Maslow Connect must install its locked dependency graph'
+assert_contains "$connect" 'pnpm --filter @maslow/connect-contracts build' 'Maslow Connect must build the bridge contract dependency first'
+assert_contains "$connect" 'pnpm --filter @maslow/connect-bridge deploy --legacy --prod' 'Maslow Connect must deploy only its production bridge closure'
+assert_contains "$connect" "-name '.bin'" 'Maslow Connect must remove build-path pnpm shims from the runtime closure'
+assert_contains "$connect" 'usr/bin/maslow-connect-mcp' 'Maslow Connect must package the MCP entry point'
+assert_contains "$connect" 'usr/share/applications/maslow-connect.desktop' 'Maslow Connect must own its launcher'
+assert_contains "$connect" 'usr/share/maslow-connect/codex-plugin' 'Maslow Connect must ship the reviewed Codex plugin bundle'
 
 if grep -Fq 'pkgname='"'"'maslow' "$runtime" "$settings"; then
   printf 'FAIL: package names must remain compatible with Omarchy\n' >&2

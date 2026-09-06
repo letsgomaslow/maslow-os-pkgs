@@ -1,0 +1,74 @@
+# Maintainer: Maslow OS <support@maslow.ai>
+pkgname='maslow-connect'
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Maslow-owned MCP connection bridge and agent plugin'
+arch=('any')
+url='https://github.com/letsgomaslow/maslow-connect'
+license=('LicenseRef-Maslow-Connect')
+depends=('nodejs>=22' 'libsecret' 'xdg-utils')
+makedepends=('git' 'pnpm')
+options=('!strip' '!debug')
+
+_commit='74147630003660a031b0cf159fff9965bb7e9b3b'
+
+# Release builds use an immutable source commit. Coordinated local-source ISO
+# builds set MASLOW_CONNECT_SRC to the exact reviewed checkout instead.
+if [[ -n "${MASLOW_CONNECT_SRC:-}" ]]; then
+  source=()
+  sha256sums=()
+else
+  source=("maslow-connect::git+https://github.com/letsgomaslow/maslow-connect.git#commit=${_commit}")
+  sha256sums=('SKIP')
+fi
+
+prepare() {
+  if [[ -n "${MASLOW_CONNECT_SRC:-}" ]]; then
+    rm -rf "$srcdir/maslow-connect"
+    mkdir -p "$srcdir/maslow-connect"
+    bsdtar -C "$MASLOW_CONNECT_SRC" \
+      --exclude='./.git' \
+      --exclude='./node_modules' \
+      --exclude='*/node_modules' \
+      --exclude='*/dist' \
+      -cf - . | bsdtar -C "$srcdir/maslow-connect" -xf -
+  fi
+}
+
+build() {
+  cd "$srcdir/maslow-connect"
+  CI=true pnpm install --frozen-lockfile
+  pnpm --filter @maslow/connect-contracts build
+  pnpm --filter @maslow/connect-bridge build
+  pnpm --filter @maslow/connect-bridge deploy --legacy --prod "$srcdir/maslow-connect-bridge"
+  find "$srcdir/maslow-connect-bridge/node_modules" -type d -name '.bin' -prune -exec rm -rf -- {} +
+}
+
+check() {
+  cd "$srcdir/maslow-connect"
+  pnpm --filter @maslow/connect-contracts test:run
+  pnpm --filter @maslow/connect-bridge test:run
+  pnpm --filter @maslow/connect-bridge typecheck
+}
+
+package() {
+  install -d "$pkgdir/usr/lib/maslow-connect"
+  cp -a "$srcdir/maslow-connect-bridge/." "$pkgdir/usr/lib/maslow-connect/"
+
+  install -Dm755 "$srcdir/maslow-connect/packages/arch/maslow-connect" \
+    "$pkgdir/usr/bin/maslow-connect"
+  install -Dm755 "$srcdir/maslow-connect/packages/arch/maslow-connect-mcp" \
+    "$pkgdir/usr/bin/maslow-connect-mcp"
+  install -Dm644 "$srcdir/maslow-connect/packages/arch/maslow-connect.desktop" \
+    "$pkgdir/usr/share/applications/maslow-connect.desktop"
+  install -Dm644 "$srcdir/maslow-connect/assets/maslow-connect.svg" \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/maslow-connect.svg"
+
+  install -d "$pkgdir/usr/share/maslow-connect/codex-plugin"
+  cp -a "$srcdir/maslow-connect/plugins/maslow-connect/." \
+    "$pkgdir/usr/share/maslow-connect/codex-plugin/"
+  install -Dm644 "$srcdir/maslow-connect/README.md" \
+    "$pkgdir/usr/share/doc/maslow-connect/README.md"
+  install -Dm644 "$srcdir/maslow-connect/LICENSE" \
+    "$pkgdir/usr/share/licenses/maslow-connect/LICENSE"
+}
