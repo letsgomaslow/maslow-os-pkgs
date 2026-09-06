@@ -38,6 +38,11 @@ The dependency flow is `maslow-os source` -> `maslow-os-pkgs package recipes` ->
 
 # Verification
 
+- Read the runtime repository's `docs/handoffs/2026-09-05-verified-usb-native-acceptance.md` for exact candidate provenance and tester-reported native results. Later documentation commits are not new build inputs for the existing ISO.
+- Keep Chrome recipes scoped to internal testing until redistribution is explicitly approved. Pushing recipes is not authorization to publish proprietary binaries or enable inherited upstream release infrastructure.
+- Preserve curated plugin IDs, pinned-source provenance, Git update metadata, credits, and licenses; a source packaging test is not native plugin-update acceptance.
+- Do not bypass the temporary Maslow runtime hold or treat provider tool installation as sign-in/configuration success.
+
 - Run `git diff --check`.
 - Run `./test/maslow-packaging` for Maslow-owned package invariants.
 - Run focused syntax or package-build checks for every recipe changed.

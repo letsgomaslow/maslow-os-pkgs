@@ -3,8 +3,15 @@
 This public downstream of `omacom/omarchy-pkgs` builds the unrenamed
 `omarchy` and `omarchy-settings` package families for Maslow OS. The `maslow`
 branch is the product branch; `master` remains an upstream mirror. The current
-preview milestone changes only the `-dev` packages and does not publish or sign
-a production repository. See [DOWNSTREAM.md](DOWNSTREAM.md) and [NOTICE](NOTICE).
+preview milestone includes the local runtime/settings packages, preinstalled AI
+tools, curated shell plugins, and an internal Chrome recipe. It does not publish
+or sign a production repository. See [DOWNSTREAM.md](DOWNSTREAM.md) and [NOTICE](NOTICE).
+
+## Internal native-tested candidate
+
+Package commit `2f1d53ceff7478ec515b2cd1db49c63277a6471d` was used in the September 5, 2026 x86_64 candidate. The tester reported successful fresh app installs before any update, Chrome default, Maslow dock branding, and Super+A opening App Launcher. Exact build inputs and remaining acceptance gates are in the [runtime handoff](https://github.com/letsgomaslow/maslow-os/blob/main/docs/handoffs/2026-09-05-verified-usb-native-acceptance.md).
+
+Source publication is not package publication: Google Chrome redistribution remains unapproved, and native smoke testing does not establish complete AI onboarding, plugin-update, or rollback acceptance. Keep upstream package/plugin identifiers, credits, and the temporary Maslow runtime hold intact.
 
 ## Upstream package infrastructure
 
