@@ -154,5 +154,6 @@ package() {
 
   # Runtime version file.
   install -Dm644 version "$pkgdir/usr/share/omarchy/version"
+  install -Dm644 hub-interface-version "$pkgdir/usr/share/omarchy/hub-interface-version"
   install -Dm644 maslow-version "$pkgdir/usr/share/omarchy/maslow-version"
 }
