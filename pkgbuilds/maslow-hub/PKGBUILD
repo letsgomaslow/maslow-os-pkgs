@@ -1,0 +1,42 @@
+# Maintainer: Maslow AI
+pkgname=maslow-hub
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Native Maslow Hub for setup, connections and signed independent updates'
+arch=('any')
+url='https://github.com/letsgomaslow/maslow-hub'
+license=('MIT')
+depends=('python' 'openssl' 'libarchive' 'pacman' 'polkit' 'quickshell')
+makedepends=('git')
+backup=('etc/maslow-hub/channel.json')
+
+# Alpha source is private. Build an explicitly supplied checkout; do not put
+# maintainer credentials into a recipe, package, or bootstrap image.
+: "${MASLOW_HUB_SRC:?Set MASLOW_HUB_SRC to the reviewed Hub checkout}"
+source=()
+sha256sums=()
+
+pkgver() {
+  python -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$MASLOW_HUB_SRC/release/version.json"
+}
+
+package() {
+  local src=$MASLOW_HUB_SRC
+  install -d "$pkgdir/usr/share/maslow/plugins/maslow.hub" "$pkgdir/usr/lib/maslow-hub/helper" "$pkgdir/usr/share/maslow-hub"
+  cp -a "$src/ui/." "$pkgdir/usr/share/maslow/plugins/maslow.hub/"
+  install -m644 "$src"/helper/*.py "$pkgdir/usr/lib/maslow-hub/helper/"
+  cp -a "$src/catalog" "$pkgdir/usr/share/maslow-hub/"
+  install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
+  for command in "$src"/bin/*; do
+    install -Dm755 "$command" "$pkgdir/usr/bin/$(basename "$command")"
+  done
+  install -Dm644 "$src/release/config/channel.json" "$pkgdir/etc/maslow-hub/channel.json"
+  for unit in "$src"/release/systemd/user/*; do
+    install -Dm644 "$unit" "$pkgdir/usr/lib/systemd/user/$(basename "$unit")"
+  done
+  install -d "$pkgdir/usr/lib/systemd/user/timers.target.wants"
+  ln -s ../maslow-hub-check.timer "$pkgdir/usr/lib/systemd/user/timers.target.wants/maslow-hub-check.timer"
+  install -Dm644 "$src/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # Trust provisioning is a separate reviewed bootstrap operation. No test
+  # public key is silently substituted for the invited-alpha release key.
+}
