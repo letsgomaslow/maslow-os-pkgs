@@ -23,7 +23,19 @@ pkgver() {
 package() {
   local src=$MASLOW_HUB_SRC
   install -d "$pkgdir/usr/share/maslow/plugins/maslow.hub" "$pkgdir/usr/lib/maslow-hub/helper" "$pkgdir/usr/share/maslow-hub"
-  cp -a "$src/ui/." "$pkgdir/usr/share/maslow/plugins/maslow.hub/"
+  # QML engines cache components by URL. A release-specific entry-point path
+  # makes a plugin rescan load new code without restarting the whole shell.
+  local plugin_dir="$pkgdir/usr/share/maslow/plugins/maslow.hub"
+  install -d "$plugin_dir/$pkgver"
+  cp -a "$src/ui/." "$plugin_dir/$pkgver/"
+  python - "$src/ui/manifest.json" "$plugin_dir/manifest.json" "$pkgver" <<'PYMANIFEST'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+manifest["entryPoints"] = {kind: sys.argv[3] + "/" + path for kind, path in manifest["entryPoints"].items()}
+with open(sys.argv[2], "w") as output:
+    json.dump(manifest, output, indent=2)
+    output.write("\n")
+PYMANIFEST
   install -m644 "$src"/helper/*.py "$pkgdir/usr/lib/maslow-hub/helper/"
   cp -a "$src/catalog" "$pkgdir/usr/share/maslow-hub/"
   install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
