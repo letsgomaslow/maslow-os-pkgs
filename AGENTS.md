@@ -1,5 +1,15 @@
 # Maslow OS Package Repository Agent Instructions
 
+## Resume the Hub workstream
+
+Read the runtime repository's `docs/maslow-development.md` and its current dated handoffs before Hub work. If absent in the runtime saved checkout, use `git show codex/maslow-hub:docs/maslow-development.md` there and `git worktree list` to locate its implementation. This is the canonical status/backlog/lessons index, not this file. Inspect local branches/status first: this worktree's `codex/maslow-hub` is not the product `maslow` branch or the separate Connect branch.
+
+Those documentation paths belong to the runtime checkout, not this package repository. From here, use `git -C "<runtime-checkout>" show codex/maslow-hub:docs/maslow-development.md` after resolving the actual checkout path.
+
+Hub source is owned by `letsgomaslow/maslow-hub`; this repository owns `pkgbuilds/maslow-hub/PKGBUILD`. Keep Hub outside Omarchy-owned paths with version-specific QML and package-managed ownership. Do not silently change dependencies, test-fixture versions, release trust, or signing/publication settings. Record exact consumed source/archive hashes and coordinated commits; retain the difference between built revisions and later documentation heads.
+
+After each session, update the runtime index/handoff with scoped changes, checks, failures, gates, and next action. Documentation-only edits need `git diff --check`, link/revision validation, and staged-scope review; package builds are required when package behavior changes, not for this navigation text. Current Hub evidence supersedes the historical September 5 candidate references below for new Hub work.
+
 Work in this repository as part of the three-repository Maslow OS product pipeline. Optimize for correct package contents, reproducible ownership, and compatibility with upstream Omarchy.
 
 # Repository Role
