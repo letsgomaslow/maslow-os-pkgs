@@ -38,6 +38,9 @@ with open(sys.argv[2], "w") as output:
 PYMANIFEST
   install -m644 "$src"/helper/*.py "$pkgdir/usr/lib/maslow-hub/helper/"
   cp -a "$src/catalog" "$pkgdir/usr/share/maslow-hub/"
+  if [[ -d $src/observability ]]; then
+    cp -a "$src/observability" "$pkgdir/usr/share/maslow-hub/"
+  fi
   install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
   for command in "$src"/bin/*; do
     install -Dm755 "$command" "$pkgdir/usr/bin/$(basename "$command")"
