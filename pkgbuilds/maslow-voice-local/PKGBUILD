@@ -1,7 +1,7 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice-local
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Local speech and isolated offline workspace support for Maslow Voice'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
@@ -25,6 +25,7 @@ check() {
 package() {
   install -d "$pkgdir/usr/lib/maslow-voice-local" "$pkgdir/usr/share/maslow-voice-local/source"
   cp -a "$srcdir/venv" "$pkgdir/usr/lib/maslow-voice-local/venv"
+  rm -f "$pkgdir/usr/lib/maslow-voice-local/venv/.lock"
   find "$pkgdir/usr/lib/maslow-voice-local/venv/bin" -type f ! -name 'python*' -delete
   find "$pkgdir/usr/lib/maslow-voice-local" -type d -name __pycache__ -prune -exec rm -rf '{}' +
   install -Dm755 "$OMARCHY_SRC/voice/bin/omarchy-voice-piper" "$pkgdir/usr/lib/maslow-voice-local/piper"

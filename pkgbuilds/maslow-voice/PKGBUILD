@@ -1,6 +1,6 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
@@ -55,6 +55,9 @@ with open(sys.argv[2],'w') as output:
     output.write('\n')
 PYMANIFEST
   install -Dm755 "$runtime/voice/bin/omarchy-voice-control" "$pkgdir/usr/bin/omarchy-voice-control"
+  # Existing installed systems keep the protected core runtime. The optional
+  # package carries this runtime-owned launcher privately, including rollback.
+  install -m755 "$runtime/bin/omarchy-launch-voice" "$library/launch"
   install -Dm644 "$runtime/voice/systemd/maslow-voice.service" "$pkgdir/usr/lib/systemd/user/maslow-voice.service"
   install -Dm644 "$runtime/voice/requirements.lock" "$pkgdir/usr/share/maslow-voice/requirements.lock"
   install -Dm644 "$runtime/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"

@@ -3,7 +3,7 @@
 # Isolated package-owned runtime: no user bootstrap and no optional extras.
 pkgname=hermes-agent
 pkgver=0.21.0
-pkgrel=2
+pkgrel=3
 pkgdesc='Hermes Agent CLI with an isolated Python runtime'
 arch=('x86_64')
 url='https://github.com/NousResearch/hermes-agent'
@@ -45,6 +45,8 @@ check() {
 package() {
   install -d "$pkgdir/opt/hermes-agent" "$pkgdir/usr/bin"
   cp -a "$srcdir/python" "$pkgdir/opt/hermes-agent/python"
+  # uv's writable build lock has no role in the installed runtime.
+  rm -f "$pkgdir/opt/hermes-agent/python/lib/python3.13/site-packages/.lock"
   install -d "$pkgdir/opt/hermes-agent/app"
   cd "$srcdir/hermes-agent-$_tag"
   cp -a ./*.py pyproject.toml cli-config.yaml.example LICENSE \

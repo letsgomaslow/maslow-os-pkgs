@@ -41,6 +41,15 @@ PYMANIFEST
   if [[ -d $src/observability ]]; then
     cp -a "$src/observability" "$pkgdir/usr/share/maslow-hub/"
   fi
+  # The signed Hub payload may carry the reviewed optional Voice installer.
+  # Its archives stay opaque regular files in Hub-owned paths until the user
+  # explicitly installs Voice through the separately checked terminal action.
+  if [[ -n ${MASLOW_VOICE_BUNDLE:-} ]]; then
+    python "$src/release/check-voice-bundle.py" "$MASLOW_VOICE_BUNDLE"
+    install -d "$pkgdir/usr/share/maslow-hub/voice/packages"
+    install -m644 "$MASLOW_VOICE_BUNDLE/manifest.json" "$pkgdir/usr/share/maslow-hub/voice/manifest.json"
+    install -m644 "$MASLOW_VOICE_BUNDLE/packages/"*.pkg.tar.zst "$pkgdir/usr/share/maslow-hub/voice/packages/"
+  fi
   install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
   for command in "$src"/bin/*; do
     install -Dm755 "$command" "$pkgdir/usr/bin/$(basename "$command")"
