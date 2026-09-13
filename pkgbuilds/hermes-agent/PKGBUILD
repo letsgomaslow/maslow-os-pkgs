@@ -3,7 +3,7 @@
 # Isolated package-owned runtime: no user bootstrap and no optional extras.
 pkgname=hermes-agent
 pkgver=0.21.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Hermes Agent CLI with an isolated Python runtime'
 arch=('x86_64')
 url='https://github.com/NousResearch/hermes-agent'
@@ -25,6 +25,9 @@ build() {
   # Export only the locked core closure; every downloaded dependency is hashed.
   UV_PYTHON_DOWNLOADS=never uv export --frozen --no-dev --no-default-groups --no-emit-project --no-header --format requirements-txt --output-file "$srcdir/core-requirements.txt" >/dev/null
   UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.13/site-packages" --require-hashes -r "$srcdir/core-requirements.txt"
+  # The local Runs API is optional upstream. Add only its locked HTTP closure,
+  # without enabling messaging providers or installing dependencies at runtime.
+  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.13/site-packages" --require-hashes -r "$startdir/api-requirements.lock"
   # Upstream forbids generic wheels because runtime assets need source layout.
   # Keep that layout and bundle only the terminal frontend, not Electron/web.
   npm ci --workspace ui-tui --workspace apps/shared --ignore-scripts --no-audit --no-fund
@@ -35,6 +38,7 @@ check() {
   cd "$srcdir/hermes-agent-$_tag"
   "$srcdir/python/bin/python3" -m hermes_cli.main --version
   "$srcdir/python/bin/python3" -m hermes_cli.main chat --help | grep -qF -- '--oneshot'
+  "$srcdir/python/bin/python3" -c 'import aiohttp; assert aiohttp.__version__ == "3.14.3"'
   [[ -s ui-tui/dist/entry.js ]]
 }
 
@@ -65,5 +69,6 @@ package() {
   install -Dm644 "$srcdir/hermes-agent-$_tag/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 "$srcdir/python/lib/python3.13/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/PYTHON-LICENSE.txt"
   install -Dm644 "$srcdir/core-requirements.txt" "$pkgdir/usr/share/$pkgname/core-requirements.txt"
+  install -Dm644 "$startdir/api-requirements.lock" "$pkgdir/usr/share/$pkgname/api-requirements.lock"
   install -Dm644 "$srcdir/hermes-agent-$_tag/uv.lock" "$pkgdir/usr/share/$pkgname/uv.lock"
 }

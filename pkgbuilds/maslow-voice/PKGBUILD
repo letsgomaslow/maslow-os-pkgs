@@ -1,0 +1,59 @@
+# Maintainer: Maslow AI
+pkgname=maslow-voice
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Maslow conversational Voice with separate local task coordination'
+arch=('x86_64')
+url='https://github.com/letsgomaslow/maslow-os'
+license=('MIT')
+depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2')
+makedepends=('git' 'uv' 'qt6-shadertools')
+optdepends=('maslow-voice-local: local speech and isolated offline workspace' 'codex: coding tasks' 'claude-code: coding tasks')
+options=('!strip' '!debug')
+
+if [[ -n ${OMARCHY_SRC:-} ]]; then
+  source=()
+  sha256sums=()
+else
+  source=('git+https://github.com/letsgomaslow/maslow-os.git#branch=main')
+  sha256sums=('SKIP')
+fi
+
+build() {
+  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  uv venv --clear --python /usr/bin/python "$srcdir/venv"
+  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/venv/bin/python" --require-hashes -r "$runtime/voice/requirements.lock"
+  /usr/lib/qt6/bin/qsb --glsl '100 es,120,150' "$runtime/voice/ui/VoiceOrb.frag" -o "$srcdir/VoiceOrb.frag.qsb"
+}
+
+check() {
+  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from livekit.agents import AgentSession; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert "expressive" in inspect.signature(AgentSession).parameters'
+  [[ -s $srcdir/VoiceOrb.frag.qsb ]]
+}
+
+package() {
+  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  local library="$pkgdir/usr/lib/maslow-voice" plugin="$pkgdir/usr/share/maslow/plugins/maslow.voice"
+  install -d "$library" "$plugin/$pkgver"
+  cp -a "$srcdir/venv" "$library/venv"
+  # No private entrypoint may retain a build-directory shebang. Production
+  # launches the interpreter directly; unused generated scripts are removed.
+  find "$library/venv/bin" -type f ! -name 'python*' -delete
+  cp -a "$runtime/voice/maslow_voice" "$runtime/voice/hermes_plugin" "$runtime/voice/assets" "$library/"
+  find "$library" -type d -name __pycache__ -prune -exec rm -rf '{}' +
+  cp -a "$runtime/voice/ui/." "$plugin/$pkgver/"
+  install -m644 "$srcdir/VoiceOrb.frag.qsb" "$plugin/$pkgver/VoiceOrb.frag.qsb"
+  python - "$plugin/$pkgver/manifest.json" "$plugin/manifest.json" "$pkgver" <<'PYMANIFEST'
+import json,sys
+manifest=json.load(open(sys.argv[1]))
+manifest['entryPoints']={kind:sys.argv[3]+'/'+path for kind,path in manifest['entryPoints'].items()}
+with open(sys.argv[2],'w') as output:
+    json.dump(manifest,output,indent=2)
+    output.write('\n')
+PYMANIFEST
+  install -Dm755 "$runtime/voice/bin/omarchy-voice-control" "$pkgdir/usr/bin/omarchy-voice-control"
+  install -Dm644 "$runtime/voice/systemd/maslow-voice.service" "$pkgdir/usr/lib/systemd/user/maslow-voice.service"
+  install -Dm644 "$runtime/voice/requirements.lock" "$pkgdir/usr/share/maslow-voice/requirements.lock"
+  install -Dm644 "$runtime/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
