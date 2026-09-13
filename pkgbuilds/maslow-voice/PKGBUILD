@@ -37,6 +37,8 @@ package() {
   local library="$pkgdir/usr/lib/maslow-voice" plugin="$pkgdir/usr/share/maslow/plugins/maslow.voice"
   install -d "$library" "$plugin/$pkgver"
   cp -a "$srcdir/venv" "$library/venv"
+  # uv's build-time lock is world-writable and has no installed runtime role.
+  rm -f "$library/venv/.lock"
   # No private entrypoint may retain a build-directory shebang. Production
   # launches the interpreter directly; unused generated scripts are removed.
   find "$library/venv/bin" -type f ! -name 'python*' -delete
