@@ -1,6 +1,6 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
-pkgver=0.1.3
+pkgver=0.1.4
 pkgrel=1
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
@@ -28,7 +28,7 @@ build() {
 
 check() {
   local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
-  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from livekit.agents import AgentSession; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert "expressive" in inspect.signature(AgentSession).parameters'
+  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from maslow_voice.providers import OpenAILiveProvider; from livekit.agents import AgentSession; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert "expressive" in inspect.signature(AgentSession).parameters'
   [[ -s $srcdir/VoiceOrb.frag.qsb ]]
 }
 
@@ -49,6 +49,7 @@ package() {
   python - "$plugin/$pkgver/manifest.json" "$plugin/manifest.json" "$pkgver" <<'PYMANIFEST'
 import json,sys
 manifest=json.load(open(sys.argv[1]))
+manifest['version']=sys.argv[3]
 manifest['entryPoints']={kind:sys.argv[3]+'/'+path for kind,path in manifest['entryPoints'].items()}
 with open(sys.argv[2],'w') as output:
     json.dump(manifest,output,indent=2)
