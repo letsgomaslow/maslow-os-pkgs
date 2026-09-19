@@ -1,7 +1,7 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
 pkgver=0.1.5
-pkgrel=5
+pkgrel=7
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
