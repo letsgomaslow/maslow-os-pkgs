@@ -1,7 +1,7 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
-pkgver=0.1.4
-pkgrel=16
+pkgver=0.1.5
+pkgrel=1
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
@@ -28,7 +28,7 @@ build() {
 
 check() {
   local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
-  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from maslow_voice.providers import OpenAILiveProvider, LiveKitNativeExpressiveProvider; from maslow_voice.providers.livekit_native_audio import NativeAgentAudioInput, NativeAgentAudioOutput; from livekit.agents import AgentSession; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert {"expressive", "aec_warmup_duration"} <= set(inspect.signature(AgentSession).parameters)'
+  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from maslow_voice.providers import OpenAILiveProvider, LiveKitGeminiProvider, LiveKitNativeExpressiveProvider; from maslow_voice.providers.livekit_native_audio import NativeAgentAudioInput, NativeAgentAudioOutput; from livekit.agents import AgentSession; from livekit.plugins import google; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert {"expressive", "aec_warmup_duration"} <= set(inspect.signature(AgentSession).parameters)'
   [[ -s $srcdir/VoiceOrb.frag.qsb ]]
 }
 
