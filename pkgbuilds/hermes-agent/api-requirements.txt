@@ -1,0 +1,4 @@
+# Same aiohttp version as the pinned Hermes source's optional gateway closure.
+aiohttp==3.14.3
+# Preserve the pinned core interpreter closure's shared dependency.
+idna==3.18

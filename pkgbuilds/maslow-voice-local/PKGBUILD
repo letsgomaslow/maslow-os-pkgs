@@ -1,0 +1,35 @@
+# Maintainer: Maslow AI
+pkgname=maslow-voice-local
+pkgver=0.1.0
+pkgrel=2
+pkgdesc='Local speech and isolated offline workspace support for Maslow Voice'
+arch=('x86_64')
+url='https://github.com/letsgomaslow/maslow-os'
+license=('MIT' 'GPL-3.0-or-later')
+depends=('maslow-voice' 'bubblewrap' 'weston' 'ollama' 'python' 'libsndfile')
+makedepends=('uv')
+options=('!strip' '!debug')
+: "${OMARCHY_SRC:?Set OMARCHY_SRC to the reviewed runtime checkout}"
+source=('piper_tts-1.8.0.tar.gz::https://files.pythonhosted.org/packages/02/cc/95b18b58d9c235d8e0bcece7321b7a7347873c14f9fea2c734b31ef04ff2/piper_tts-1.8.0.tar.gz')
+sha256sums=('830588aded347df579c91a32703e0fc2a3685d84f1e3533b14f2de69135d4904')
+
+build() {
+  uv venv --clear --python /usr/bin/python "$srcdir/venv"
+  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/venv/bin/python" --require-hashes -r "$OMARCHY_SRC/voice/local-requirements.lock"
+}
+
+check() {
+  "$srcdir/venv/bin/python" -m piper --help >/dev/null
+}
+
+package() {
+  install -d "$pkgdir/usr/lib/maslow-voice-local" "$pkgdir/usr/share/maslow-voice-local/source"
+  cp -a "$srcdir/venv" "$pkgdir/usr/lib/maslow-voice-local/venv"
+  rm -f "$pkgdir/usr/lib/maslow-voice-local/venv/.lock"
+  find "$pkgdir/usr/lib/maslow-voice-local/venv/bin" -type f ! -name 'python*' -delete
+  find "$pkgdir/usr/lib/maslow-voice-local" -type d -name __pycache__ -prune -exec rm -rf '{}' +
+  install -Dm755 "$OMARCHY_SRC/voice/bin/omarchy-voice-piper" "$pkgdir/usr/lib/maslow-voice-local/piper"
+  install -Dm644 "$OMARCHY_SRC/voice/local-requirements.lock" "$pkgdir/usr/share/maslow-voice-local/requirements.lock"
+  install -m644 "$srcdir/piper_tts-1.8.0.tar.gz" "$pkgdir/usr/share/maslow-voice-local/source/"
+  install -Dm644 "$srcdir/piper_tts-1.8.0/COPYING" "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+}

@@ -1,0 +1,66 @@
+# Maintainer: Maslow AI
+pkgname=maslow-hub
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Native Maslow Hub for setup, connections and signed independent updates'
+arch=('any')
+url='https://github.com/letsgomaslow/maslow-hub'
+license=('MIT')
+depends=('python' 'openssl' 'libarchive' 'pacman' 'polkit' 'quickshell')
+makedepends=('git')
+backup=('etc/maslow-hub/channel.json')
+
+# Alpha source is private. Build an explicitly supplied checkout; do not put
+# maintainer credentials into a recipe, package, or bootstrap image.
+: "${MASLOW_HUB_SRC:?Set MASLOW_HUB_SRC to the reviewed Hub checkout}"
+source=()
+sha256sums=()
+
+pkgver() {
+  python -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$MASLOW_HUB_SRC/release/version.json"
+}
+
+package() {
+  local src=$MASLOW_HUB_SRC
+  install -d "$pkgdir/usr/share/maslow/plugins/maslow.hub" "$pkgdir/usr/lib/maslow-hub/helper" "$pkgdir/usr/share/maslow-hub"
+  # QML engines cache components by URL. A release-specific entry-point path
+  # makes a plugin rescan load new code without restarting the whole shell.
+  local plugin_dir="$pkgdir/usr/share/maslow/plugins/maslow.hub"
+  install -d "$plugin_dir/$pkgver"
+  cp -a "$src/ui/." "$plugin_dir/$pkgver/"
+  python - "$src/ui/manifest.json" "$plugin_dir/manifest.json" "$pkgver" <<'PYMANIFEST'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+manifest["entryPoints"] = {kind: sys.argv[3] + "/" + path for kind, path in manifest["entryPoints"].items()}
+with open(sys.argv[2], "w") as output:
+    json.dump(manifest, output, indent=2)
+    output.write("\n")
+PYMANIFEST
+  install -m644 "$src"/helper/*.py "$pkgdir/usr/lib/maslow-hub/helper/"
+  cp -a "$src/catalog" "$pkgdir/usr/share/maslow-hub/"
+  if [[ -d $src/observability ]]; then
+    cp -a "$src/observability" "$pkgdir/usr/share/maslow-hub/"
+  fi
+  # The signed Hub payload may carry the reviewed optional Voice installer.
+  # Its archives stay opaque regular files in Hub-owned paths until the user
+  # explicitly installs Voice through the separately checked terminal action.
+  if [[ -n ${MASLOW_VOICE_BUNDLE:-} ]]; then
+    python "$src/release/check-voice-bundle.py" "$MASLOW_VOICE_BUNDLE"
+    install -d "$pkgdir/usr/share/maslow-hub/voice/packages"
+    install -m644 "$MASLOW_VOICE_BUNDLE/manifest.json" "$pkgdir/usr/share/maslow-hub/voice/manifest.json"
+    install -m644 "$MASLOW_VOICE_BUNDLE/packages/"*.pkg.tar.zst "$pkgdir/usr/share/maslow-hub/voice/packages/"
+  fi
+  install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
+  for command in "$src"/bin/*; do
+    install -Dm755 "$command" "$pkgdir/usr/bin/$(basename "$command")"
+  done
+  install -Dm644 "$src/release/config/channel.json" "$pkgdir/etc/maslow-hub/channel.json"
+  for unit in "$src"/release/systemd/user/*; do
+    install -Dm644 "$unit" "$pkgdir/usr/lib/systemd/user/$(basename "$unit")"
+  done
+  install -d "$pkgdir/usr/lib/systemd/user/timers.target.wants"
+  ln -s ../maslow-hub-check.timer "$pkgdir/usr/lib/systemd/user/timers.target.wants/maslow-hub-check.timer"
+  install -Dm644 "$src/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # Trust provisioning is a separate reviewed bootstrap operation. No test
+  # public key is silently substituted for the invited-alpha release key.
+}
