@@ -1,12 +1,12 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
 pkgver=0.1.5
-pkgrel=19
+pkgrel=20
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
 license=('MIT')
-depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2')
+depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2' 'tmux')
 makedepends=('git' 'uv' 'qt6-shadertools')
 optdepends=('maslow-voice-local: local speech and isolated offline workspace' 'codex: coding tasks' 'claude-code: coding tasks')
 options=('!strip' '!debug')
