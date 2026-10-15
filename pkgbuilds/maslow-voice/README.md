@@ -1,0 +1,23 @@
+# Voice 0.1.5-44 native Hub 2 preview
+
+Current status, October 15, 2026: Voice44 is installed with Hub2.0.3 and backend3 through reviewed matched local signed delivery. Native Hub handoffs, saved-state preservation and canonical Hub rollback/reapply pass; Voice UI/audio remain unchanged. See [the packaging baseline](../../docs/hub-2-baseline.md) and runtime handoff. This is not public-channel or live provider/audio acceptance. Earlier candidate-only notes are historical and do not reopen settled recovery work.
+
+This local candidate pins runtime `a8afb84f` (reviewed `4c488a85` implementation plus its active-history regression). Its exact source archive SHA-256 is `79d53d783d6a56c1583f5f4626c887a51ed70c242ddcd8c6a85bf23d8a45387e`. The additive Hub view uses the existing control client in non-starting mode, cached task/settings summaries and existing native handoffs. Voice UI, audio configuration, SDK locks and package dependencies are unchanged.
+
+Pass the extracted archive through `OMARCHY_SRC` and the original tar through `MASLOW_RUNTIME_ARCHIVE`. The source verifier checks production and owning-test inputs before build/check/package. An older published bundle does not establish admission of this version; the matched local signed bundle and its owning delivery were reviewed separately.
+
+The coordinator may reuse the verified Voice43 virtual environment and compiled unchanged orb shader for a bounded local repackage, running this recipe's import/shader check and source verification first. Audit the resulting actual archive against this exact source and the unchanged Voice43 dependency payload. Do not treat a repackage as a fresh dependency build.
+
+The original unsigned-candidate stage is complete: matched local delivery and owning recovery were separately reviewed and completed. No trust/gate promotion, key changes, provider calls, microphone use, new ISO or Craft resumption follows from source integration. Preserve the exact original archive pin; current documentation is not a new runtime input.
+
+## Historical Voice41 preparation
+
+The candidate consumes exact runtime `914d77dda835cc3e884434ec18a589facdd4d8ae`, git archive SHA-256 `60514fee6acb6534b192a081ec149dbe5f3667fac5ad18a8ba5ec07ba218ba86`. It includes reviewed managed quiescence and isolated, source-only startup, preserving Craft's Qt6.12 qualification and the typed Free AI composer. Pass the extracted archive through `OMARCHY_SRC` and its original tar through `MASLOW_RUNTIME_ARCHIVE`. The recipe verifies the production and owning-check inputs before build, check and package. The source manifest is installed under `/usr/share/maslow-voice`; versioned UI ownership advances to `0.1.5-41`.
+
+Source verification rejects all symlinks, including cache aliases, and rejects sourceless bytecode outside `__pycache__`. The recipe import check uses a fresh private Python cache prefix. Owning execution requires cache-free read-only source inputs and an unset outer `PYTHONPYCACHEPREFIX`, preserving the startup test's intentional adjacent-cache fixture. Generated caches are stripped from the package.
+
+The SDK lock and dependencies remain unchanged. The package adds `/usr/lib/maslow-voice/bootstrap.py` and a root-owned lifecycle capability marker derived from the reviewed source manifest. Service and control entrypoints use isolated Python with site startup and bytecode caches disabled. This on-disk marker does not prove the code loaded by a running daemon: Hub's separate launch provenance must establish that. Tests and developer probes remain check inputs, outside the installed package. Historical Voice40 and earlier archives remain retained externally. The new delivery module hash is `47753fa8bcaa097de05a873ec1b8b36353af3e7ee31b1078f2a5f6c99c0ff31a`; its lifecycle marker remains schema1/lifecycle2. Typed negative unit tests and an on-disk marker do not establish the loaded-daemon witness; independent Root witness and loaded Voice41 acceptance remain required.
+
+After coordinator admission to the serialized native slot, run normal clean `makepkg --cleanbuild --noconfirm` in a fresh output context in the retained Voice builder. Run the owning wrapper with `MASLOW_VOICE_PYTHON` pointing to that build's pinned venv and PATH prefixed by private Node 22.23.3; then run `ui-controller-test.mjs` and `ui-work-composer-test.mjs`. Node is a check-only input. Record exact builder, recipe, source, interpreter and archive hashes. Check overlap with unchanged FreeAI2 and unchanged Connect8, and inspect installed paths before acceptance.
+
+Preparation authorizes no build slot, installation, signing, publication, live accounts/provider use or audio. Recipe import/shader checks do not replace the owning wrapper or installed guest/Lenovo gates.

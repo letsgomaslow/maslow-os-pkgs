@@ -1,26 +1,40 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
 pkgver=0.1.5
-pkgrel=19
+pkgrel=44
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
 license=('MIT')
-depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2')
+depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2' 'tmux')
 makedepends=('git' 'uv' 'qt6-shadertools')
 optdepends=('maslow-voice-local: local speech and isolated offline workspace' 'codex: coding tasks' 'claude-code: coding tasks')
 options=('!strip' '!debug')
+_runtime_archive_sha256=79d53d783d6a56c1583f5f4626c887a51ed70c242ddcd8c6a85bf23d8a45387e
+: "${MASLOW_RUNTIME_ARCHIVE:?Set MASLOW_RUNTIME_ARCHIVE to the exact reviewed git archive}"
 
 if [[ -n ${OMARCHY_SRC:-} ]]; then
-  source=()
-  sha256sums=()
+  source=('source-tools.py' 'source-integrity.json')
+  sha256sums=('454cd09bf35e95eae879cada87961ec18f17c56a19979e48b90bc06ad1fc0932' 'bf3117bce936b7a94475944b7b6c140e8771c77ae6a94e7bf5a124dacbd25de2')
 else
-  source=('git+https://github.com/letsgomaslow/maslow-os.git#branch=main')
-  sha256sums=('SKIP')
+  source=('git+https://github.com/letsgomaslow/maslow-os.git#branch=main' 'source-tools.py' 'source-integrity.json')
+  sha256sums=('SKIP' '454cd09bf35e95eae879cada87961ec18f17c56a19979e48b90bc06ad1fc0932' 'bf3117bce936b7a94475944b7b6c140e8771c77ae6a94e7bf5a124dacbd25de2')
 fi
+
+_verify_candidate_source() {
+  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  [[ -f $MASLOW_RUNTIME_ARCHIVE && ! -L $MASLOW_RUNTIME_ARCHIVE ]] || return 1
+  [[ $(sha256sum "$MASLOW_RUNTIME_ARCHIVE" | cut -d' ' -f1) == "$_runtime_archive_sha256" ]] || return 1
+  python "$srcdir/source-tools.py" "$runtime" "$srcdir/source-integrity.json"
+}
+
+prepare() {
+  _verify_candidate_source || return 1
+}
 
 build() {
   local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  _verify_candidate_source || return 1
   uv venv --clear --python /usr/bin/python "$srcdir/venv"
   UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/venv/bin/python" --require-hashes -r "$runtime/voice/requirements.lock"
   /usr/lib/qt6/bin/qsb --glsl '100 es,120,150' "$runtime/voice/ui/VoiceOrb.frag" -o "$srcdir/VoiceOrb.frag.qsb"
@@ -28,12 +42,18 @@ build() {
 
 check() {
   local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
-  PYTHONPATH="$runtime/voice" "$srcdir/venv/bin/python" -c 'from maslow_voice.daemon import VoiceService; from maslow_voice.providers import OpenAILiveProvider, LiveKitGeminiProvider, LiveKitNativeExpressiveProvider; from maslow_voice.providers.livekit_native_audio import NativeAgentAudioInput, NativeAgentAudioOutput; from livekit.agents import AgentSession; from livekit.plugins import google; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert {"expressive", "aec_warmup_duration"} <= set(inspect.signature(AgentSession).parameters)'
+  _verify_candidate_source || return 1
+  local check_cache check_status=0
+  check_cache=$(mktemp -d "$srcdir/voice-check-cache.XXXXXX") || return 1
+  "$srcdir/venv/bin/python" -I -B -X "pycache_prefix=$check_cache" -c 'import sys; sys.path.insert(0,sys.argv[1]); from maslow_voice.daemon import VoiceService; from maslow_voice.providers import OpenAILiveProvider, LiveKitGeminiProvider, LiveKitNativeExpressiveProvider; from maslow_voice.providers.livekit_native_audio import NativeAgentAudioInput, NativeAgentAudioOutput; from livekit.agents import AgentSession; from livekit.plugins import google; from claude_agent_sdk import ClaudeSDKClient; import inspect; assert {"expressive", "aec_warmup_duration"} <= set(inspect.signature(AgentSession).parameters)' "$runtime/voice" || check_status=$?
+  rm -rf -- "$check_cache"
+  (( check_status == 0 )) || return "$check_status"
   [[ -s $srcdir/VoiceOrb.frag.qsb ]]
 }
 
 package() {
   local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  _verify_candidate_source || return 1
   local library="$pkgdir/usr/lib/maslow-voice" plugin="$pkgdir/usr/share/maslow/plugins/maslow.voice"
   local ui_revision="$pkgver-$pkgrel"
   install -d "$library" "$plugin/$ui_revision"
@@ -43,9 +63,14 @@ package() {
   # No private entrypoint may retain a build-directory shebang. Production
   # launches the interpreter directly; unused generated scripts are removed.
   find "$library/venv/bin" -type f ! -name 'python*' -delete
-  cp -a "$runtime/voice/maslow_voice" "$runtime/voice/hermes_plugin" "$runtime/voice/assets" "$library/"
+  cp -a "$runtime/voice/maslow_voice" "$runtime/voice/hermes_plugin" "$runtime/voice/assistant_plugin" "$runtime/voice/assets" "$library/"
+  install -m644 "$runtime/voice/assistant_worker.py" "$library/assistant_worker.py"
+  install -m644 "$runtime/voice/bootstrap.py" "$library/bootstrap.py"
   find "$library" -type d -name __pycache__ -prune -exec rm -rf '{}' +
+  find "$library" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
   cp -a "$runtime/voice/ui/." "$plugin/$ui_revision/"
+  find "$plugin" -type d -name __pycache__ -prune -exec rm -rf '{}' +
+  find "$plugin" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
   install -m644 "$srcdir/VoiceOrb.frag.qsb" "$plugin/$ui_revision/VoiceOrb.frag.qsb"
   python - "$plugin/$ui_revision/manifest.json" "$plugin/manifest.json" "$pkgver" "$ui_revision" <<'PYMANIFEST'
 import json,sys
@@ -64,5 +89,17 @@ PYMANIFEST
   install -m755 "$runtime/bin/omarchy-launch-voice" "$library/launch"
   install -Dm644 "$runtime/voice/systemd/maslow-voice.service" "$pkgdir/usr/lib/systemd/user/maslow-voice.service"
   install -Dm644 "$runtime/voice/requirements.lock" "$pkgdir/usr/share/maslow-voice/requirements.lock"
+  install -m644 "$srcdir/source-integrity.json" "$pkgdir/usr/share/maslow-voice/source-integrity.json"
+  python - "$srcdir/source-integrity.json" "$pkgdir/usr/share/maslow-voice/free-ai-lifecycle.json" "$pkgver-$pkgrel" <<'PYLIFECYCLE'
+import json,sys
+source=json.load(open(sys.argv[1]))
+marker={'schema':1,'package':'maslow-voice','version':sys.argv[3],
+        'sourceCommit':source['gitCommit'],'managedLifecycle':2,
+        'freeAiDeliverySha256':source['files']['voice/maslow_voice/free_ai_delivery.py']}
+with open(sys.argv[2],'x') as output:
+    json.dump(marker,output,sort_keys=True,indent=2)
+    output.write('\n')
+PYLIFECYCLE
+  chmod 644 "$pkgdir/usr/share/maslow-voice/free-ai-lifecycle.json"
   install -Dm644 "$runtime/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

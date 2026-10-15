@@ -50,6 +50,15 @@ PYMANIFEST
     install -m644 "$MASLOW_VOICE_BUNDLE/manifest.json" "$pkgdir/usr/share/maslow-hub/voice/manifest.json"
     install -m644 "$MASLOW_VOICE_BUNDLE/packages/"*.pkg.tar.zst "$pkgdir/usr/share/maslow-hub/voice/packages/"
   fi
+  # Dedicated optional Free AI payload. Signature/trust and runtime recovery
+  # authorization remain separate; a Hub update never installs these archives.
+  if [[ -n ${MASLOW_FREE_AI_BUNDLE:-} ]]; then
+    : "${MASLOW_FREE_AI_BUNDLE_TRUST:?Set an explicitly reviewed public bundle trust key}"
+    python "$src/release/check-free-ai-bundle.py" "$MASLOW_FREE_AI_BUNDLE" "$MASLOW_FREE_AI_BUNDLE_TRUST"
+    install -d "$pkgdir/usr/share/maslow-hub/free-ai/packages"
+    install -m644 "$MASLOW_FREE_AI_BUNDLE/manifest.json" "$MASLOW_FREE_AI_BUNDLE/manifest.json.sig" "$pkgdir/usr/share/maslow-hub/free-ai/"
+    install -m644 "$MASLOW_FREE_AI_BUNDLE/packages/"*.pkg.tar.zst "$MASLOW_FREE_AI_BUNDLE/packages/"*.pkg.tar.zst.sig "$pkgdir/usr/share/maslow-hub/free-ai/packages/"
+  fi
   install -Dm644 "$src/release/version.json" "$pkgdir/usr/share/maslow-hub/version.json"
   for command in "$src"/bin/*; do
     install -Dm755 "$command" "$pkgdir/usr/bin/$(basename "$command")"

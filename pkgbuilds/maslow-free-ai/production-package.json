@@ -1,0 +1,11 @@
+{
+  "name": "@maslow/free-cloud-router",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["server"],
+  "overrides": {
+    "fast-uri": "3.1.8",
+    "proxy-addr": "2.0.8",
+    "qs": "6.16.0"
+  }
+}

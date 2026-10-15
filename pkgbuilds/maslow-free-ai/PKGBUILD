@@ -1,0 +1,157 @@
+# Maintainer: Maslow AI
+pkgname=maslow-free-ai
+pkgver=0.1.0
+pkgrel=3
+pkgdesc='Experimental private Maslow Free cloud AI text/function router'
+arch=('x86_64')
+url='https://github.com/letsgomaslow/maslow-os'
+license=('MIT')
+depends=('python' 'glibc>=2.44' 'gcc-libs' 'libsecret' 'glib2')
+makedepends=('git' 'python' 'gcc' 'make')
+optdepends=('maslow-voice: requires reviewed typed task_submit and free-cloud execution connection support'
+            'hermes-agent: private task execution through capable Maslow Voice')
+options=('!strip' '!debug')
+
+_upstream_commit=65ec96df6450224a95a0eabfff8b41b394b2396f
+_node_version=22.23.3
+_lock_sha256=3e6265bd3a3346ca362fd54405e5ed404df72e6a0002cd07d2390dce54463038
+_production_lock_sha256=843dcda1e14f77c8fea99598d1f16b4846b9a3c0d95bdaccc9539f8f3c63946e
+_production_package_sha256=3b246ab7623f358bc43a039dd4aef19b4137260d5ab9cc76dd81d58b2579bf31
+_production_server_sha256=610371a6cdda7bed0360e81a4591809b8f56b6224266f3bac335a55a39315475
+_runtime_archive_sha256=4dd74a9f5cfaf4a8ded2057e59c973d4da511feb81ac558799170f6bbaef5bf4
+# The new adapter is not in a reviewed public source archive yet. Do not fall
+# back to an older product HEAD or silently consume an unreviewed checkout.
+: "${MASLOW_FREE_AI_SRC:?Set MASLOW_FREE_AI_SRC to the exact reviewed runtime checkout}"
+: "${MASLOW_RUNTIME_ARCHIVE:?Set MASLOW_RUNTIME_ARCHIVE to the exact reviewed git archive}"
+source=("freellmapi-${_upstream_commit}.tar.gz::https://codeload.github.com/tashfeenahmed/freellmapi/tar.gz/${_upstream_commit}"
+        "https://nodejs.org/dist/v${_node_version}/node-v${_node_version}-linux-x64.tar.xz"
+        'package-tools.py' 'source-integrity.json' 'production-package.json' 'production-server.json' 'production-lock.json'
+        'test-missing-sharp.mjs' 'packaged-chat-proof.mjs' 'test-only-fetch.mjs')
+sha256sums=('b64d80d409c6ae6f696f356a4c2f19fd75a44e30268e3566ade6088229f52e9e'
+            'df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de'
+            'SKIP' 'bf1d928b835fa25673aaae5dcb92467cca61143133321def9ae04f1687a23a4f'
+            '3b246ab7623f358bc43a039dd4aef19b4137260d5ab9cc76dd81d58b2579bf31'
+            '610371a6cdda7bed0360e81a4591809b8f56b6224266f3bac335a55a39315475'
+            '843dcda1e14f77c8fea99598d1f16b4846b9a3c0d95bdaccc9539f8f3c63946e'
+            'SKIP' 'SKIP' 'SKIP')
+
+_verify_candidate_archive() {
+  [[ -f $MASLOW_RUNTIME_ARCHIVE && ! -L $MASLOW_RUNTIME_ARCHIVE ]] || return 1
+  [[ $(sha256sum "$MASLOW_RUNTIME_ARCHIVE" | cut -d' ' -f1) == "$_runtime_archive_sha256" ]]
+}
+
+prepare() {
+  _verify_candidate_archive || return 1
+  local runtime="$srcdir/maslow-runtime"
+  python "$srcdir/package-tools.py" snapshot-source "$MASLOW_FREE_AI_SRC" "$srcdir/source-integrity.json" "$runtime"
+  cd "$srcdir/freellmapi-$_upstream_commit"
+  [[ $(sha256sum package-lock.json | cut -d' ' -f1) == "$_lock_sha256" ]]
+  git apply --check "$runtime/free_ai/router/upstream.patch"
+  git apply "$runtime/free_ai/router/upstream.patch"
+  install -Dm644 "$runtime/free_ai/router/src/maslow-main.ts" server/src/maslow-main.ts
+  install -d server/src/maslow server/src/__tests__/maslow
+  install -m644 "$runtime/free_ai/router/src/maslow/"*.ts server/src/maslow/
+  install -m644 "$runtime/free_ai/tests/router-boundary.test.ts" server/src/__tests__/maslow/boundary.test.ts
+}
+
+build() {
+  _verify_candidate_archive || return 1
+  python "$srcdir/package-tools.py" verify-source "$srcdir/maslow-runtime" "$srcdir/source-integrity.json"
+  local upstream="$srcdir/freellmapi-$_upstream_commit" node_home="$srcdir/node-v$_node_version-linux-x64"
+  export PATH="$node_home/bin:/usr/bin:/bin"
+  export npm_config_nodedir="$node_home" npm_config_build_from_source=true
+  cd "$upstream"
+  [[ $(node --version) == "v$_node_version" ]]
+  [[ $(sha256sum package-lock.json | cut -d' ' -f1) == "$_lock_sha256" ]]
+  [[ $(sha256sum "$srcdir/production-package.json" | cut -d' ' -f1) == "$_production_package_sha256" ]]
+  [[ $(sha256sum "$srcdir/production-server.json" | cut -d' ' -f1) == "$_production_server_sha256" ]]
+  python "$srcdir/package-tools.py" review-production-lock "$upstream/package-lock.json" "$srcdir/production-lock.json" "$srcdir/production-lock-review.json"
+  if [[ -n ${MASLOW_FREE_AI_NATIVE_CACHE:-} ]]; then
+    # Explicit coordinator-approved incremental builds may reuse only the
+    # byte/mode-identical source dependency tree, Node headers and private Node.
+    python "$srcdir/package-tools.py" verify-native-cache "$srcdir" "$MASLOW_FREE_AI_NATIVE_CACHE"
+  else
+    npm ci --ignore-scripts --no-audit --no-fund --workspace server --workspace shared
+    npm rebuild better-sqlite3 --no-audit --no-fund
+  fi
+  npm run build -w server
+  install -d "$srcdir/production/server/dist" "$srcdir/production/shared"
+  # Bundle only the entry's local import closure; npm modules stay external.
+  # No upstream index, administration entrypoint or migration CLI is shipped.
+  ./node_modules/.bin/esbuild server/dist/maslow-main.js --bundle --platform=node --format=esm --packages=external \
+    --metafile="$srcdir/compiled-inputs.json" --outfile="$srcdir/production/server/dist/maslow-main.js"
+  # This test-only bundle is never copied into the installed package.
+  ./node_modules/.bin/esbuild server/dist/lib/image-normalize.js --bundle --platform=node --format=esm --packages=external \
+    --outfile="$srcdir/production/server/dist/normalize-proof.mjs"
+  install -m644 "$srcdir/production-package.json" "$srcdir/production/package.json"
+  install -m644 "$srcdir/production-lock.json" "$srcdir/production/package-lock.json"
+  install -m644 "$srcdir/production-server.json" "$srcdir/production/server/package.json"
+  cd "$srcdir/production"
+  npm ci --omit=dev --ignore-scripts --no-audit --no-fund --workspace server
+  if [[ -n ${MASLOW_FREE_AI_NATIVE_CACHE:-} ]]; then
+    # The unchanged better-sqlite3 source/integrity and private Node headers were
+    # verified above. Reuse only that proven addon, never a prior runtime graph.
+    install -Dm644 "$upstream/node_modules/better-sqlite3/build/Release/better_sqlite3.node" node_modules/better-sqlite3/build/Release/better_sqlite3.node
+  else
+    npm rebuild better-sqlite3 --no-audit --no-fund
+  fi
+  # The private runtime never runs npm or package bin launchers.
+  for modules in node_modules server/node_modules shared/node_modules; do
+    [[ ! -d $modules ]] || find "$modules" -type d -name .bin -prune -exec rm -rf '{}' +
+  done
+  python "$srcdir/package-tools.py" audit-production "$srcdir/production" "$srcdir/production-audit.json"
+}
+
+check() {
+  _verify_candidate_archive || return 1
+  python "$srcdir/package-tools.py" verify-source "$srcdir/maslow-runtime" "$srcdir/source-integrity.json"
+  local node_home="$srcdir/node-v$_node_version-linux-x64"
+  export PATH="$node_home/bin:/usr/bin:/bin"
+  cd "$srcdir/freellmapi-$_upstream_commit"
+  npm run test -w server -- src/__tests__/maslow/boundary.test.ts
+  MASLOW_ROUTER_ENTRY="$srcdir/production/server/dist/maslow-main.js" node --test "$srcdir/maslow-runtime/free_ai/tests/router-bootstrap.test.mjs"
+  node "$srcdir/test-missing-sharp.mjs" "$srcdir/production/server/dist/normalize-proof.mjs"
+  # Exercise exactly the bytes/dependencies package() will install.
+  install -d "$srcdir/proof-package/node/bin" "$srcdir/proof-package/router"
+  ln -sfnT "$node_home/bin/node" "$srcdir/proof-package/node/bin/node"
+  ln -sfnT "$srcdir/production/server" "$srcdir/proof-package/router/server"
+  ln -sfnT "$srcdir/production/node_modules" "$srcdir/proof-package/router/node_modules"
+  node "$srcdir/packaged-chat-proof.mjs" "$srcdir/proof-package"
+  cd "$srcdir/production"
+  node --input-type=module -e 'import {createRequire} from "node:module"; const require=createRequire(import.meta.url); const Database=require("better-sqlite3"); const db=new Database(":memory:"); if(process.version!=="v22.23.3" || process.versions.modules!=="127" || !db.prepare("SELECT 1 AS ok").get().ok)process.exit(1); db.close();'
+}
+
+package() {
+  _verify_candidate_archive || return 1
+  local library="$pkgdir/usr/lib/maslow-free-ai" notices="$pkgdir/usr/share/licenses/$pkgname"
+  local runtime="$srcdir/maslow-runtime"
+  python "$srcdir/package-tools.py" verify-source "$runtime" "$srcdir/source-integrity.json"
+  install -d "$library/node/bin" "$library/router/server/dist" "$library/maslow_free_ai" "$notices"
+  install -m755 "$srcdir/node-v$_node_version-linux-x64/bin/node" "$library/node/bin/node"
+  install -m644 "$srcdir/production/server/dist/maslow-main.js" "$library/router/server/dist/maslow-main.js"
+  # Runtime workspace manifests do not carry development scripts or tooling.
+  printf '{"type":"module","private":true}\n' > "$library/router/server/package.json"
+  cp -a "$srcdir/production/node_modules" "$library/router/"
+  if [[ -d $srcdir/production/server/node_modules ]]; then
+    cp -a "$srcdir/production/server/node_modules" "$library/router/server/"
+  fi
+  # Keep the proven addon at bindings' normal path, without node-gyp objects,
+  # test extensions, Makefiles or embedded build-directory metadata.
+  install -m644 "$library/router/node_modules/better-sqlite3/build/Release/better_sqlite3.node" "$srcdir/package-sqlite.node"
+  rm -rf "$library/router/node_modules/better-sqlite3/build"
+  install -Dm644 "$srcdir/package-sqlite.node" "$library/router/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+  # Required package data can include build/install JS, but none is installed
+  # as a runnable launcher. Only the private Node and fixed control CLI execute.
+  find "$library/router" -type f -exec chmod 644 '{}' +
+  install -m644 "$runtime/free_ai/maslow_free_ai/"*.py "$library/maslow_free_ai/"
+  install -Dm755 "$runtime/free_ai/bin/omarchy-free-ai" "$pkgdir/usr/bin/omarchy-free-ai"
+  install -m644 "$runtime/LICENSE" "$notices/Maslow-LICENSE"
+  install -m644 "$srcdir/freellmapi-$_upstream_commit/LICENSE" "$notices/FreeLLMAPI-LICENSE"
+  install -m644 "$srcdir/node-v$_node_version-linux-x64/LICENSE" "$notices/Node-LICENSE"
+  python "$srcdir/package-tools.py" notices "$srcdir/production" "$notices/dependencies"
+  python "$srcdir/package-tools.py" metadata "$srcdir/source-integrity.json" "$srcdir/production-audit.json" \
+    "$srcdir/compiled-inputs.json" "$library/router/server/dist/maslow-main.js" "$pkgdir/usr/share/maslow-free-ai/compatibility.json"
+  install -m644 "$srcdir/production-lock.json" "$pkgdir/usr/share/maslow-free-ai/production-lock.json"
+  install -m644 "$srcdir/production-lock-review.json" "$pkgdir/usr/share/maslow-free-ai/production-lock-review.json"
+  chmod -R go-w "$library" "$notices"
+}

@@ -1,0 +1,24 @@
+{
+  "files": {
+    "LICENSE": "717ba1949502290f8e47688ae2e323acd06c8ca47aec9f7596b15f678c1af4a2",
+    "free_ai/bin/omarchy-free-ai": "e26edafce4bf11cf7ab8bd53978ab09dbb546c40316bd2eab42dc5d45751e424",
+    "free_ai/maslow_free_ai/__init__.py": "4e80de2b2723c8d72d12efc3245103695cdf538726aaddf6927c0928b31d098f",
+    "free_ai/maslow_free_ai/control.py": "ba9c880be02832125ad247112b41781faa35a8a2cddeab5e83574cd394028aed",
+    "free_ai/maslow_free_ai/credentials.py": "8b1b3e99500d1bd815d015f73362e4b2e9dde1ccf7662d922894b4f5120830f4",
+    "free_ai/maslow_free_ai/errors.py": "7793f7fbd4898fdf0da29a8d9d092a1f4769f2ee57872672cfef13b7f0d31479",
+    "free_ai/maslow_free_ai/recovery.py": "5fef7b923345dd454182e686adceef15ff3f5bffb79ee260cdc123daf7f348ee",
+    "free_ai/maslow_free_ai/router_worker.py": "75b8cfa1cb80da02ef6c2b4f0140fde6f5a495066f41c568f76481a676ce53de",
+    "free_ai/maslow_free_ai/runtime.py": "45d0a28708ca7896a05f7f938b607c53fc6c096d0a1837b82dbe3f5992b29a88",
+    "free_ai/maslow_free_ai/state.py": "fff0eaade37b37cdfbaa4ee76f4e83663bc867400c6f97db3be0adaa93758f4a",
+    "free_ai/router/src/maslow-main.ts": "3ebe18b1d97f8974af8a4336e3e4e2e3fe9e33890e6981004839466e6716c92d",
+    "free_ai/router/src/maslow/app.ts": "78350406265c466ba1e7dac74f147e63e9469a30a248848fa335b58b5f5bac00",
+    "free_ai/router/src/maslow/policy.ts": "d9cddb2baaa86d013869578908435f64ad8438c202f416ea8448c5e29b127c70",
+    "free_ai/router/upstream.patch": "a271e0968dc1a4d414c0d79dd4064202ad0e83224118be6fb7a22e6f6eba9515",
+    "free_ai/tests/router-bootstrap.test.mjs": "e0bb933b99b2e9053f1a8b0cd8196008c4e0079ebebf0ed985ef4f9df28a0e0d",
+    "free_ai/tests/router-boundary.test.ts": "b0b53cb0f8ff01840fd115866e23407b13f0e8bb34031baa451f3bf2aa697f6a"
+  },
+  "gitArchiveSha256": "4dd74a9f5cfaf4a8ded2057e59c973d4da511feb81ac558799170f6bbaef5bf4",
+  "gitCommit": "a41012c6b207ac912eb034b813834485efe094f9",
+  "reviewed": true,
+  "schema": 1
+}
