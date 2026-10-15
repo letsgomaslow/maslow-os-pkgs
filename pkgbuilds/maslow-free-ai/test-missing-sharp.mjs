@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+const { normalizeMessageImages } = await import(pathToFileURL(process.argv[2]).href);
+const messages = [{ role: 'user', content: [{ type: 'image_url', image_url: { url: 'data:image/png;base64,AA==' } }] }];
+const before = JSON.stringify(messages);
+const result = await normalizeMessageImages(messages, { enabled: true });
+assert.equal(result.normalized, 0);
+assert.equal(result.messages, messages);
+assert.equal(JSON.stringify(messages), before);
+console.log('Optional missing-sharp normalization preserves its input. External media remains rejected.');

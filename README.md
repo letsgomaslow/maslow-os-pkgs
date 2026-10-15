@@ -13,6 +13,8 @@ It is based on [Omarchy's package repository](https://github.com/omacom/omarchy-
 
 Recipes live in `pkgbuilds/<package>/PKGBUILD`, with supporting metadata in `.omarchy/package.json`.
 
+The [accepted Hub 2 baseline](docs/hub-2-baseline.md) records the reviewed Hub2.0.3 / Voice44 / backend3 recipe inputs, installed preservation and rollback/reapply evidence, and future-agent constraints. The `maslow` source integration does not publish those packages or promote unfinished Connect delivery.
+
 ## Platform and preview status
 
 The current Maslow installer targets **x86_64 Intel/AMD PCs and virtual machines**, not just Apple computers. It has been tested on a Lenovo ThinkPad.

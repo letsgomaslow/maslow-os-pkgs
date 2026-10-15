@@ -2,11 +2,13 @@
 
 ## Resume the Hub workstream
 
-Read the runtime repository's `docs/maslow-development.md` and its current dated handoffs before Hub work. If absent in the runtime saved checkout, use `git show codex/maslow-hub:docs/maslow-development.md` there and `git worktree list` to locate its implementation. This is the canonical status/backlog/lessons index, not this file. Inspect local branches/status first: this worktree's `codex/maslow-hub` is not the product `maslow` branch or the separate Connect branch.
+Read [the accepted Hub 2 packaging baseline](docs/hub-2-baseline.md), then the runtime repository's `docs/maslow-development.md` and current handoff. The accepted installed preview is Hub2.0.3, Voice0.1.5-44 and Free AI0.1.0-3. Inspect status, history and worktrees; begin iterations from the current product `maslow` branch. Historical `codex/maslow-hub` feature names and older candidate versions are not resume instructions.
 
-Those documentation paths belong to the runtime checkout, not this package repository. From here, use `git -C "<runtime-checkout>" show codex/maslow-hub:docs/maslow-development.md` after resolving the actual checkout path.
+The shared index belongs to runtime `letsgomaslow/maslow-os`, whose product branch is `main`; locate that checkout through Git inventory. Hub source has its own `main`. Package/ISO product branches are `maslow`; do not create a package `main` or merge downstream work into upstream `master`.
 
 Hub source is owned by `letsgomaslow/maslow-hub`; this repository owns `pkgbuilds/maslow-hub/PKGBUILD`. Keep Hub outside Omarchy-owned paths with version-specific QML and package-managed ownership. Do not silently change dependencies, test-fixture versions, release trust, or signing/publication settings. Record exact consumed source/archive hashes and coordinated commits; retain the difference between built revisions and later documentation heads.
+
+Preserve the Hub2 native journeys, official MASLOW | AI-OS lockup/Manrope and Voice/backend ownership described by the source baseline. Keep the exact Voice44/backend3 source archives pinned to reviewed revisions; do not repin to a later documentation/merge HEAD. The Hub recipe derives its version from the supplied source and keeps signed optional bundles inert until an owning action. This integration excludes unfinished Connect recipes; Connect delivery stays gated and Craft paused. Source merge does not authorize package publication, signing, gate promotion, installing on a host or rebuilding an ISO.
 
 After each session, update the runtime index/handoff with scoped changes, checks, failures, gates, and next action. Documentation-only edits need `git diff --check`, link/revision validation, and staged-scope review; package builds are required when package behavior changes, not for this navigation text. Current Hub evidence supersedes the historical September 5 candidate references below for new Hub work.
 
