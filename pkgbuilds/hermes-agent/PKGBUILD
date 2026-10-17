@@ -2,36 +2,33 @@
 
 # Isolated package-owned runtime: no user bootstrap and no optional extras.
 pkgname=hermes-agent
-pkgver=0.21.0
-pkgrel=3
+pkgver=0.22.2
+pkgrel=2
 pkgdesc='Hermes Agent CLI with an isolated Python runtime'
 arch=('x86_64')
 url='https://github.com/NousResearch/hermes-agent'
-license=('MIT' 'PSF-2.0')
-depends=('glibc' 'zlib' 'bash' 'nodejs')
+license=('MIT')
+depends=('glibc' 'zlib' 'bash' 'nodejs>=22.22' 'python>=3.14' 'python<3.15')
 makedepends=('uv' 'npm')
 options=('!strip' '!debug')
-_tag=2026.8.31
-_commit=6e8f8418e6378eb2617e4de074e13dedd091b8af
-_python=3.13.15
-_python_build=20260901
-source=("hermes-agent-${_tag}.tar.gz::${url}/archive/refs/tags/v${_tag}.tar.gz"
-  "python-${_python}-${_python_build}.tar.gz::https://github.com/astral-sh/python-build-standalone/releases/download/${_python_build}/cpython-${_python}%2B${_python_build}-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz")
-sha256sums=('78fb3ff707ec1d17044b875ecac8bef28aa39d44242824f6871ca40afe7bf217'
-  '8a689a077337bea6d1c4bc0b7df1d52fcaa28f5f67e50df8bf417c1e3f9d8874')
+_tag=0.22.2
+_commit=d923a5eb487a17c0a68801bba9ef0f56c81040a8
+source=("hermes-agent-${_tag}.tar.gz::${url}/archive/refs/tags/v${_tag}.tar.gz")
+sha256sums=('77d2c763a3bd5133bfb3e327986c987dba249e14988b92919ef726d389c6b9d2')
 
 build() {
   cd "$srcdir/hermes-agent-$_tag"
+  UV_PYTHON_DOWNLOADS=never uv venv --clear --relocatable --python /usr/bin/python3 "$srcdir/python"
   # Export only the locked core closure; every downloaded dependency is hashed.
   UV_PYTHON_DOWNLOADS=never uv export --frozen --no-dev --no-default-groups --no-emit-project --no-header --format requirements-txt --output-file "$srcdir/core-requirements.txt" >/dev/null
-  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.13/site-packages" --require-hashes -r "$srcdir/core-requirements.txt"
+  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.14/site-packages" --require-hashes -r "$srcdir/core-requirements.txt"
   # The local Runs API is optional upstream. Add only its locked HTTP closure,
   # without enabling messaging providers or installing dependencies at runtime.
-  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.13/site-packages" --require-hashes -r "$startdir/api-requirements.lock"
+  UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/python/bin/python3" --target "$srcdir/python/lib/python3.14/site-packages" --require-hashes -r "$startdir/api-requirements.lock"
   # Upstream forbids generic wheels because runtime assets need source layout.
   # Keep that layout and bundle only the terminal frontend, not Electron/web.
   npm ci --workspace ui-tui --workspace apps/shared --ignore-scripts --no-audit --no-fund
-  node ui-tui/scripts/build.mjs
+  node scripts/build/tui.mjs
 }
 
 check() {
@@ -46,11 +43,12 @@ package() {
   install -d "$pkgdir/opt/hermes-agent" "$pkgdir/usr/bin"
   cp -a "$srcdir/python" "$pkgdir/opt/hermes-agent/python"
   # uv's writable build lock has no role in the installed runtime.
-  rm -f "$pkgdir/opt/hermes-agent/python/lib/python3.13/site-packages/.lock"
+  rm -f "$pkgdir/opt/hermes-agent/python/.lock" "$pkgdir/opt/hermes-agent/python/lib/python3.14/site-packages/.lock"
+  find "$pkgdir/opt/hermes-agent/python/bin" -type f ! -name 'python*' -delete
   install -d "$pkgdir/opt/hermes-agent/app"
   cd "$srcdir/hermes-agent-$_tag"
   cp -a ./*.py pyproject.toml cli-config.yaml.example LICENSE \
-    agent tools hermes_cli gateway cron acp_adapter plugins providers tui_gateway \
+    agent tools hermes_cli gateway cron acp_adapter plugins providers tui_gateway pm \
     skills optional-skills optional-mcps locales assets scripts \
     "$pkgdir/opt/hermes-agent/app/"
   install -d "$pkgdir/opt/hermes-agent/app/ui-tui"
@@ -59,17 +57,24 @@ package() {
   find "$pkgdir/opt/hermes-agent" -type f -name '*.pyc' -delete
   # uv's --target scripts contain the build interpreter path and are not used
   # by this package's launcher. Keep module APIs, not broken private executables.
-  rm -rf "$pkgdir/opt/hermes-agent/python/lib/python3.13/site-packages/bin"
+  rm -rf "$pkgdir/opt/hermes-agent/python/lib/python3.14/site-packages/bin"
   # Invoke the relocatable interpreter directly, not build-directory entrypoints.
   printf '%s\n' '#!/bin/bash' \
     'unset PYTHONHOME' \
     'export PYTHONPATH=/opt/hermes-agent/app' \
     'export HERMES_PYTHON=/opt/hermes-agent/python/bin/python3' \
     'export HERMES_TUI_DIR=/opt/hermes-agent/app/ui-tui' \
+    'export HERMES_DISABLE_LAZY_INSTALLS=1' \
     'exec /opt/hermes-agent/python/bin/python3 -s -P -m hermes_cli.main "$@"' > "$pkgdir/usr/bin/hermes"
   chmod 755 "$pkgdir/usr/bin/hermes"
+  # The root-owned payload is updated by pacman, never by runtime bootstrap.
+  local built_at
+  built_at=$(date -u -d "@${SOURCE_DATE_EPOCH:-1792043576}" '+%Y-%m-%dT%H:%M:%SZ')
+  cat >"$pkgdir/opt/hermes-agent/app/install-stamp.json" <<EOF
+{"schemaVersion":2,"commit":"$_commit","commitDate":1792043576,"branch":null,"builtAt":"$built_at","dirty":false,"source":"maslow-package","distribution":"package-manager","updateMechanism":"external","baseVersion":"$pkgver","displayVersion":"$pkgver","distance":0,"payload":"bootstrap","tag":null}
+EOF
+  chmod -R go-w "$pkgdir/opt/hermes-agent"
   install -Dm644 "$srcdir/hermes-agent-$_tag/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$srcdir/python/lib/python3.13/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/PYTHON-LICENSE.txt"
   install -Dm644 "$srcdir/core-requirements.txt" "$pkgdir/usr/share/$pkgname/core-requirements.txt"
   install -Dm644 "$startdir/api-requirements.lock" "$pkgdir/usr/share/$pkgname/api-requirements.lock"
   install -Dm644 "$srcdir/hermes-agent-$_tag/uv.lock" "$pkgdir/usr/share/$pkgname/uv.lock"

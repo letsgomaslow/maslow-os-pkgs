@@ -1,0 +1,9 @@
+# Hermes 0.22.2-2 Voice compatibility candidate
+
+The immutable v0.22.2 source archive (SHA-256 `77d2c763a3bd5133bfb3e327986c987dba249e14988b92919ef726d389c6b9d2`) corresponds to peeled commit `d923a5eb487a17c0a68801bba9ef0f56c81040a8`. This source implements both the application retry limit and the zero recovery-cycle control required by Voice's unchanged fail-closed worker. The prior 0.21.0 package lacks the latter control.
+
+Upstream's core dependencies now require Python 3.14. This recipe uses a private relocatable environment backed by the declared system Python `>=3.14,<3.15`, retaining the existing `/opt/hermes-agent/app`, `/opt/hermes-agent/python/bin/python3` and `/usr/bin/hermes` contracts. Arch must rebuild this package before advancing the Python minor version. No interpreter is downloaded during the build.
+
+The build exports the pinned upstream core lock with no extras or development groups, then installs it with hashes. The additional hashed aiohttp closure preserves the existing local Runs HTTP capability and shares core's exact idna 3.19 pin. Only the terminal frontend is bundled; the AUR package's optional messaging, Matrix, browser and voice extras are not imported into this recipe. The launcher disables lazy package installation, overrides hostile Python paths, preserves the project working directory and marks the root-owned application as externally updated. New provider extras require a separately reviewed package build.
+
+The `check()` function imports the real CLI, confirms the one-shot CLI interface, imports the Runs HTTP dependency and verifies the compiled terminal frontend. Run `test/hermes-installed-isolation` after normal installation, and the owning Voice default/accounts constructor probes without network or inference. These checks do not establish account sign-in, actual provider requests, audio or task delivery.

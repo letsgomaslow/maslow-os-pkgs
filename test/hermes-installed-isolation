@@ -9,7 +9,7 @@ printf '%s\n' 'raise RuntimeError("UNTRUSTED CWD MODULE LOADED")' > "$work/proje
 cp "$work/project/hermes_cli/__init__.py" "$work/hostile/hermes_cli/__init__.py"
 cd "$work/project"
 output=$(PYTHONPATH="$work/hostile" PYTHONHOME="$work/missing-python" /usr/bin/hermes --version)
-grep -qF 'Hermes Agent v0.21.0' <<< "$output"
+grep -qF 'Hermes Agent v0.22.2' <<< "$output"
 # -P changes import search, not the actual working directory. Exercise that
 # exact interpreter mode separately so the isolation cannot hide a chdir fix.
 actual=$(PYTHONPATH=/opt/hermes-agent/app /opt/hermes-agent/python/bin/python3 -s -P -c 'import os; print(os.getcwd())')

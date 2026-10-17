@@ -1,19 +1,19 @@
 # Maintainer: Maslow AI
 pkgname=maslow-voice
 pkgver=0.1.5
-pkgrel=44
+pkgrel=45
 pkgdesc='Maslow conversational Voice with separate local task coordination'
 arch=('x86_64')
 url='https://github.com/letsgomaslow/maslow-os'
 license=('MIT')
-depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.21.0-2' 'tmux')
+depends=('python>=3.14' 'python<3.15' 'quickshell' 'libsecret' 'portaudio' 'libsndfile' 'hermes-agent>=0.22.2-2' 'tmux')
 makedepends=('git' 'uv' 'qt6-shadertools')
 optdepends=('maslow-voice-local: local speech and isolated offline workspace' 'codex: coding tasks' 'claude-code: coding tasks')
 options=('!strip' '!debug')
 _runtime_archive_sha256=79d53d783d6a56c1583f5f4626c887a51ed70c242ddcd8c6a85bf23d8a45387e
 : "${MASLOW_RUNTIME_ARCHIVE:?Set MASLOW_RUNTIME_ARCHIVE to the exact reviewed git archive}"
 
-if [[ -n ${OMARCHY_SRC:-} ]]; then
+if [[ -n ${MASLOW_VOICE_SRC:-${OMARCHY_SRC:-}} ]]; then
   source=('source-tools.py' 'source-integrity.json')
   sha256sums=('454cd09bf35e95eae879cada87961ec18f17c56a19979e48b90bc06ad1fc0932' 'bf3117bce936b7a94475944b7b6c140e8771c77ae6a94e7bf5a124dacbd25de2')
 else
@@ -22,7 +22,7 @@ else
 fi
 
 _verify_candidate_source() {
-  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  local runtime=${MASLOW_VOICE_SRC:-${OMARCHY_SRC:-$srcdir/maslow-os}}
   [[ -f $MASLOW_RUNTIME_ARCHIVE && ! -L $MASLOW_RUNTIME_ARCHIVE ]] || return 1
   [[ $(sha256sum "$MASLOW_RUNTIME_ARCHIVE" | cut -d' ' -f1) == "$_runtime_archive_sha256" ]] || return 1
   python "$srcdir/source-tools.py" "$runtime" "$srcdir/source-integrity.json"
@@ -33,7 +33,7 @@ prepare() {
 }
 
 build() {
-  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  local runtime=${MASLOW_VOICE_SRC:-${OMARCHY_SRC:-$srcdir/maslow-os}}
   _verify_candidate_source || return 1
   uv venv --clear --python /usr/bin/python "$srcdir/venv"
   UV_NO_CONFIG=1 UV_PYTHON_DOWNLOADS=never uv pip install --python "$srcdir/venv/bin/python" --require-hashes -r "$runtime/voice/requirements.lock"
@@ -41,7 +41,7 @@ build() {
 }
 
 check() {
-  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  local runtime=${MASLOW_VOICE_SRC:-${OMARCHY_SRC:-$srcdir/maslow-os}}
   _verify_candidate_source || return 1
   local check_cache check_status=0
   check_cache=$(mktemp -d "$srcdir/voice-check-cache.XXXXXX") || return 1
@@ -52,7 +52,7 @@ check() {
 }
 
 package() {
-  local runtime=${OMARCHY_SRC:-$srcdir/maslow-os}
+  local runtime=${MASLOW_VOICE_SRC:-${OMARCHY_SRC:-$srcdir/maslow-os}}
   _verify_candidate_source || return 1
   local library="$pkgdir/usr/lib/maslow-voice" plugin="$pkgdir/usr/share/maslow/plugins/maslow.voice"
   local ui_revision="$pkgver-$pkgrel"

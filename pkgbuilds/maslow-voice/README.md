@@ -1,4 +1,18 @@
-# Voice 0.1.5-44 native Hub 2 preview
+# Voice 0.1.5-45 isolated ISO candidate
+
+This candidate keeps the accepted Voice44 production and owning-test source at `a8afb84f21dfd03a15730f7c4c08b1e2ac4551da`, its source manifest and exact archive hash unchanged. It raises the Hermes dependency to `hermes-agent>=0.22.2-2`; the older 0.21 package lacks the recovery control required by Voice's fail-closed constructor gate. The packaged UI directory advances to `0.1.5-45`. This is a packaging candidate, separate from the accepted native preview below.
+
+Set `MASLOW_VOICE_SRC` to the extracted accepted Voice archive, `MASLOW_RUNTIME_ARCHIVE` to its original tar, and `OMARCHY_SRC` to the current desktop source. Existing callers that only pass `OMARCHY_SRC` retain the previous behavior. Both the exact archive digest and the complete reviewed Voice manifest are still verified at prepare, build, check and package; the source override does not authorize unreviewed source.
+
+Reproduce the archive from the runtime Git repository with:
+
+```bash
+git archive --format=tar a8afb84f21dfd03a15730f7c4c08b1e2ac4551da voice free_ai LICENSE bin/omarchy-launch-voice test/shell.d/base-test.sh test/shell.d/voice-test.sh > voice-reviewed.tar
+```
+
+Expected SHA-256: `79d53d783d6a56c1583f5f4626c887a51ed70c242ddcd8c6a85bf23d8a45387e`. Extract this archive into a dedicated source directory; do not reset or modify the desktop checkout. A newer desktop may contain changed owning-test inputs even when Voice production files are unchanged, so it must not be substituted for this export.
+
+## Accepted Voice 0.1.5-44 native Hub 2 preview
 
 Current status, October 15, 2026: Voice44 is installed with Hub2.0.3 and backend3 through reviewed matched local signed delivery. Native Hub handoffs, saved-state preservation and canonical Hub rollback/reapply pass; Voice UI/audio remain unchanged. See [the packaging baseline](../../docs/hub-2-baseline.md) and runtime handoff. This is not public-channel or live provider/audio acceptance. Earlier candidate-only notes are historical and do not reopen settled recovery work.
 
