@@ -1,7 +1,7 @@
 # Maintainer: Ryan Hughes <ryan@omarchy.org>
 pkgname='omarchy-settings-dev'
 pkgver=4.0.0.r847.g4de185b
-pkgrel=2
+pkgrel=3
 _pkgver_base=4.0.0
 _pkgver_base_tag=v3.8.2
 pkgdesc='Maslow OS defaults and branded assets powered by the Omarchy engine (maslow branch tip)'
