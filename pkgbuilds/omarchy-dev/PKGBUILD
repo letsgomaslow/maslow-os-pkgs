@@ -31,7 +31,7 @@ depends=(
 
   # Wayland / Hyprland core
   'hyprland'
-  'quickshell'
+  'quickshell>=0.3.2.r7.g2b4501a'
   'uwsm'
   'sddm'
   'xdg-desktop-portal-hyprland'

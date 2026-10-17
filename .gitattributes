@@ -1,0 +1,2 @@
+# Preserve the checksum-pinned upstream patch, whose context contains tabs and blank lines.
+pkgbuilds/quickshell/load_qtquick_611.patch -whitespace
