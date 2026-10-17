@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# Run in an isolated Linux guest/container with the package installed.
+# Run as an ordinary user in an isolated Linux guest/container with the package installed.
+(( EUID != 0 )) || { echo "Run this installed acceptance check as an ordinary user." >&2; exit 1; }
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/project/hermes_cli" "$work/hostile/hermes_cli"
@@ -16,3 +17,10 @@ actual=$(PYTHONPATH=/opt/hermes-agent/app /opt/hermes-agent/python/bin/python3 -
 [[ $actual == "$work/project" ]]
 ! grep -qE '(^|[;&])[[:space:]]*cd[[:space:]]' /usr/bin/hermes
 printf 'Packaged Hermes rejects hostile Python paths and retains project cwd.\n'
+
+# Check the admitted payload through the caller's real access rights. Syntax
+# checking parses the terminal frontend without running it or making requests.
+unreadable=$(find /opt/hermes-agent \( \( -type f ! -readable \) -o \( -type d \( ! -readable -o ! -executable \) \) \) -print -quit)
+[[ -z $unreadable ]] || { printf 'Unreadable Hermes payload: %s\n' "$unreadable" >&2; exit 1; }
+node --check /opt/hermes-agent/app/ui-tui/dist/entry.js
+printf 'Ordinary users can read the Hermes payload and parse its terminal frontend.\n'

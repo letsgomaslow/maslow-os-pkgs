@@ -67,7 +67,7 @@ if grep -Fq 'pkgname='"'"'maslow' "$runtime" "$settings"; then
 fi
 
 assert_contains "$root/pkgbuilds/hermes-agent/PKGBUILD" 'pkgver=0.22.2' 'Hermes must include the reviewed Voice recovery control'
-assert_contains "$root/pkgbuilds/maslow-voice/PKGBUILD" 'hermes-agent>=0.22.2-2' 'Voice must require the reviewed compatible Hermes recipe'
+assert_contains "$root/pkgbuilds/maslow-voice/PKGBUILD" 'hermes-agent>=0.22.2-3' 'Voice must require the reviewed compatible Hermes recipe'
 assert_contains "$root/pkgbuilds/maslow-voice/PKGBUILD" 'MASLOW_VOICE_SRC' 'Voice must accept a separately reviewed source export'
 assert_contains "$root/pkgbuilds/quickshell/PKGBUILD" '_commit=2b4501a282689792b62e94f3fb30d8f512324fe6' 'Quickshell must retain the tested current stack revision'
 for name in omarchy-settings omarchy-settings-dev; do

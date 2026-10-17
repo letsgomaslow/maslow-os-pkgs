@@ -3,7 +3,7 @@
 # Isolated package-owned runtime: no user bootstrap and no optional extras.
 pkgname=hermes-agent
 pkgver=0.22.2
-pkgrel=2
+pkgrel=3
 pkgdesc='Hermes Agent CLI with an isolated Python runtime'
 arch=('x86_64')
 url='https://github.com/NousResearch/hermes-agent'
@@ -73,7 +73,13 @@ package() {
   cat >"$pkgdir/opt/hermes-agent/app/install-stamp.json" <<EOF
 {"schemaVersion":2,"commit":"$_commit","commitDate":1792043576,"branch":null,"builtAt":"$built_at","dirty":false,"source":"maslow-package","distribution":"package-manager","updateMechanism":"external","baseVersion":"$pkgver","displayVersion":"$pkgver","distance":0,"payload":"bootstrap","tag":null}
 EOF
-  chmod -R go-w "$pkgdir/opt/hermes-agent"
+  # The frontend compiler publishes private temporary files. Public package
+  # payloads must be readable without following interpreter links outside /opt.
+  find "$pkgdir/opt/hermes-agent" \( -type f -o -type d \) -exec chmod u+rwX,go+rX,go-w -- '{}' +
+  if [[ -n $(find "$pkgdir/opt/hermes-agent" \( \( -type f ! -perm -0444 \) -o \( -type d ! -perm -0555 \) \) -print -quit) ]]; then
+    echo "ERROR: Hermes public payload is not readable and traversable" >&2
+    return 1
+  fi
   install -Dm644 "$srcdir/hermes-agent-$_tag/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 "$srcdir/core-requirements.txt" "$pkgdir/usr/share/$pkgname/core-requirements.txt"
   install -Dm644 "$startdir/api-requirements.lock" "$pkgdir/usr/share/$pkgname/api-requirements.lock"
