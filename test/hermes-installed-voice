@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+(( EUID != 0 )) || { echo 'Run the installed Voice compatibility check as an ordinary user.' >&2; exit 1; }
+: "${MASLOW_VOICE_PROBE_SOURCE:?Set the reviewed Voice source root containing free_ai/tests/hermes_profile_probe.py}"
+probe="$MASLOW_VOICE_PROBE_SOURCE/free_ai/tests/hermes_profile_probe.py"
+[[ -f $probe && -f /usr/lib/maslow-voice/assistant_worker.py ]]
+cmp "$MASLOW_VOICE_PROBE_SOURCE/voice/assistant_worker.py" /usr/lib/maslow-voice/assistant_worker.py
+for name in plugin.yaml __init__.py; do
+  cmp "$MASLOW_VOICE_PROBE_SOURCE/voice/assistant_plugin/$name" "/usr/lib/maslow-voice/assistant_plugin/$name"
+done
+# The owning probe copies the actual Maslow plugin and constructs the real
+# ManagedAgent. No tool calls, provider requests, or registry substitutes.
+for profile in default accounts; do
+  arguments=()
+  if [[ $profile == "accounts" ]]; then arguments+=(--accounts); fi
+  output=$(/usr/bin/python3 "$probe" "${arguments[@]}")
+  printf '%s\n' "$output"
+  /usr/bin/python3 - "$profile" "$output" <<'PY'
+import json, sys
+result = json.loads(sys.argv[2])
+expected = {'maslow_list_documents', 'maslow_read_document', 'maslow_create_note'}
+if sys.argv[1] == 'accounts':
+    expected.add('maslow_read_calendar')
+assert set(result['tools']) == expected, result
+assert result['api_max_retries'] == 1 and result['auto_recovery_cycles'] == 0, result
+assert result['skip_context_files'] is True, result
+assert result['memory_store'] is False and result['memory_manager'] is False, result
+PY
+done
+printf 'Installed real Hermes/Voice default and accounts profiles passed without inference.\n'

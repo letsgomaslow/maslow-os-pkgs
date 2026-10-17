@@ -1,4 +1,4 @@
-# Hermes 0.22.2-3 Voice compatibility candidate
+# Hermes 0.22.2-4 Voice compatibility candidate
 
 The immutable v0.22.2 source archive (SHA-256 `77d2c763a3bd5133bfb3e327986c987dba249e14988b92919ef726d389c6b9d2`) corresponds to peeled commit `d923a5eb487a17c0a68801bba9ef0f56c81040a8`. This source implements both the application retry limit and the zero recovery-cycle control required by Voice's unchanged fail-closed worker. The prior 0.21.0 package lacks the latter control.
 
@@ -9,3 +9,5 @@ The build exports the pinned upstream core lock with no extras or development gr
 The `check()` function imports the real CLI, confirms the one-shot CLI interface, imports the Runs HTTP dependency and verifies the compiled terminal frontend. Run `test/hermes-installed-isolation` after normal installation, and the owning Voice default/accounts constructor probes without network or inference. These checks do not establish account sign-in, actual provider requests, audio or task delivery.
 
 The public payload is normalized to owner read/write, public read and directory traversal, preserving executable bits and removing group/other write permission. Only regular files and directories are changed; interpreter links outside the payload are not followed. This fixes unreadable frontend files inherited from the compiler’s private publication directory. The installed isolation check must run as an ordinary user and checks full payload access plus `node --check` without executing the frontend.
+
+Revision 4 includes upstream's declared `hermes_platform` core package. Its absence broke configuration loading and caused plugin discovery to silently treat the explicit Maslow allowlist as absent, leaving Voice with zero tools. `package()` now compares every upstream-declared core package root with the staged payload. Run `MASLOW_VOICE_PROBE_SOURCE=/path/to/reviewed/voice-source test/hermes-installed-voice` as an ordinary user in a network-isolated environment after installing both packages; it invokes the unchanged owning default/accounts probes and checks the exact real tool names and retry controls. Revisions 2 and 3 remain rejected QA artifacts.

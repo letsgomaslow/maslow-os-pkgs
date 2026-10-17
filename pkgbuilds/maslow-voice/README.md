@@ -1,6 +1,6 @@
-# Voice 0.1.5-46 isolated ISO candidate
+# Voice 0.1.5-47 isolated ISO candidate
 
-This candidate keeps the accepted Voice44 production and owning-test source at `a8afb84f21dfd03a15730f7c4c08b1e2ac4551da`, its source manifest and exact archive hash unchanged. It raises the Hermes dependency to `hermes-agent>=0.22.2-3`; the older 0.21 package lacks the recovery control required by Voice's fail-closed constructor gate. The packaged UI directory advances to `0.1.5-46`. This is a packaging candidate, separate from the accepted native preview below.
+This candidate keeps the accepted Voice44 production and owning-test source at `a8afb84f21dfd03a15730f7c4c08b1e2ac4551da`, its source manifest and exact archive hash unchanged. It raises the Hermes dependency to `hermes-agent>=0.22.2-4`; the older 0.21 package lacks the recovery control required by Voice's fail-closed constructor gate. The packaged UI directory advances to `0.1.5-47`. This is a packaging candidate, separate from the accepted native preview below.
 
 Set `MASLOW_VOICE_SRC` to the extracted accepted Voice archive, `MASLOW_RUNTIME_ARCHIVE` to its original tar, and `OMARCHY_SRC` to the current desktop source. Existing callers that only pass `OMARCHY_SRC` retain the previous behavior. Both the exact archive digest and the complete reviewed Voice manifest are still verified at prepare, build, check and package; the source override does not authorize unreviewed source.
 

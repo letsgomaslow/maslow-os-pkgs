@@ -3,7 +3,7 @@
 # Isolated package-owned runtime: no user bootstrap and no optional extras.
 pkgname=hermes-agent
 pkgver=0.22.2
-pkgrel=3
+pkgrel=4
 pkgdesc='Hermes Agent CLI with an isolated Python runtime'
 arch=('x86_64')
 url='https://github.com/NousResearch/hermes-agent'
@@ -48,9 +48,21 @@ package() {
   install -d "$pkgdir/opt/hermes-agent/app"
   cd "$srcdir/hermes-agent-$_tag"
   cp -a ./*.py pyproject.toml cli-config.yaml.example LICENSE \
-    agent tools hermes_cli gateway cron acp_adapter plugins providers tui_gateway pm \
+    agent tools hermes_cli gateway cron acp_adapter plugins providers hermes_platform tui_gateway pm \
     skills optional-skills optional-mcps locales assets scripts \
     "$pkgdir/opt/hermes-agent/app/"
+  # Compare the installed closure to upstream's declared core packages. CLI
+  # version checks alone miss modules imported by configuration and plugins.
+  /usr/bin/python3 - "$pkgdir/opt/hermes-agent/app" <<'PY'
+import pathlib, sys, tomllib
+app = pathlib.Path(sys.argv[1])
+metadata = tomllib.loads((app / 'pyproject.toml').read_text())
+roots = {name.split('.')[0] for name in metadata['tool']['setuptools']['packages']['find']['include']}
+missing = sorted(name for name in roots if not (app / name).is_dir())
+if missing:
+    raise SystemExit('Missing declared Hermes core packages: ' + ', '.join(missing))
+print('Packaged upstream core roots: ' + ', '.join(sorted(roots)))
+PY
   install -d "$pkgdir/opt/hermes-agent/app/ui-tui"
   cp -a ui-tui/dist ui-tui/package.json "$pkgdir/opt/hermes-agent/app/ui-tui/"
   # Build probes generate bytecode with build-directory paths. Do not ship it.
