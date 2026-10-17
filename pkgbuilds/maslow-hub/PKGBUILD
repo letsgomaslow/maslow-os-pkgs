@@ -1,7 +1,7 @@
 # Maintainer: Maslow AI
 pkgname=maslow-hub
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Native Maslow Hub for setup, connections and signed independent updates'
 arch=('any')
 url='https://github.com/letsgomaslow/maslow-hub'
