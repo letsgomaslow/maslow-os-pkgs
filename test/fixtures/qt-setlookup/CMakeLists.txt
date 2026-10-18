@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.21)
+project(qt_setlookup_probe LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(Qt6 6.12 REQUIRED COMPONENTS Core Qml)
+add_executable(qt-setlookup-probe main.cpp)
+target_link_libraries(qt-setlookup-probe PRIVATE Qt6::Core Qt6::Qml)

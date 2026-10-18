@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+recipe="$root/pkgbuilds/qt6-declarative"
+bash -n "$recipe/PKGBUILD"
+(
+  source "$recipe/PKGBUILD"
+  [[ $pkgname == "qt6-declarative" && $pkgver == "6.12.0" && $pkgrel == "1.1" ]]
+  [[ ${arch[*]} == "x86_64" ]]
+  [[ ${depends[*]} == "glibc libgcc libstdc++ qt6-base" ]]
+  [[ ${makedepends[*]} == "cmake git ninja python qt6-languageserver qt6-shadertools qt6-svg vulkan-headers" ]]
+  [[ ${source[0]} == "git+https://code.qt.io/qt/qtdeclarative#commit=4332fbbb4c340463dc8cee36dda0c85d932122d8" ]]
+  [[ ${sha256sums[0]} == "7d885b62ac323844249590fbcf73dad0b3d6c5c0e4adfbff645f4e314a8fa80b" ]]
+  [[ ${#source[@]} == 2 && ${#sha256sums[@]} == 2 ]]
+  [[ $(declare -f prepare) == *'patch --fuzz=0 -Np1 -i'* ]]
+  printf '%s  %s\n' "${sha256sums[1]}" "$recipe/${source[1]}" | sha256sum -c -
+)
+printf 'QT_DECLARATIVE_PACKAGING_CONTRACT_PASS\n'
