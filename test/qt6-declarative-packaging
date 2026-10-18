@@ -5,14 +5,22 @@ recipe="$root/pkgbuilds/qt6-declarative"
 bash -n "$recipe/PKGBUILD"
 (
   source "$recipe/PKGBUILD"
-  [[ $pkgname == "qt6-declarative" && $pkgver == "6.12.0" && $pkgrel == "1.1" ]]
+  [[ $pkgname == "qt6-declarative" && $pkgver == "6.12.0" && $pkgrel == "1.2" ]]
   [[ ${arch[*]} == "x86_64" ]]
   [[ ${depends[*]} == "glibc libgcc libstdc++ qt6-base" ]]
   [[ ${makedepends[*]} == "cmake git ninja python qt6-languageserver qt6-shadertools qt6-svg vulkan-headers" ]]
   [[ ${source[0]} == "git+https://code.qt.io/qt/qtdeclarative#commit=4332fbbb4c340463dc8cee36dda0c85d932122d8" ]]
   [[ ${sha256sums[0]} == "2abdb7dc4300da123b730ff70e11f5c3b8643dc27ce9efcb906bd8670fbf17e7" ]]
-  [[ ${#source[@]} == 2 && ${#sha256sums[@]} == 2 ]]
-  [[ $(declare -f prepare) == *'patch --fuzz=0 -Np1 -i'* ]]
-  printf '%s  %s\n' "${sha256sums[1]}" "$recipe/${source[1]}" | sha256sum -c -
+  [[ ${#source[@]} == 3 && ${#sha256sums[@]} == 3 ]]
+  [[ ${source[1]} == "5f22a7236a5c1813b7efd49d860b451bdda73f07.patch" ]]
+  [[ ${sha256sums[1]} == "34217cb28af69935865c697e399b00c434560725c54164c4d996728f66ceb34e" ]]
+  [[ ${source[2]} == "8c92fe01338c76885f412a68fd39238147e21a81.patch" ]]
+  [[ ${sha256sums[2]} == "43b24ea2bc2adcf3fddba61a0fa1cc77ed9da44517f2c0f0d889fc14ac2330b5" ]]
+  prepare_body=$(declare -f prepare)
+  [[ $prepare_body == *'patch --fuzz=0 -Np1 -i "$srcdir/5f22a7236a5c1813b7efd49d860b451bdda73f07.patch"'* ]]
+  [[ $prepare_body == *'patch --fuzz=0 -Np1 -i "$srcdir/8c92fe01338c76885f412a68fd39238147e21a81.patch"'* ]]
+  for index in 1 2; do
+    printf '%s  %s\n' "${sha256sums[index]}" "$recipe/${source[index]}" | sha256sum -c -
+  done
 )
 printf 'QT_DECLARATIVE_PACKAGING_CONTRACT_PASS\n'

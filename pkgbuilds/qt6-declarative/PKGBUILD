@@ -5,7 +5,7 @@
 pkgname=qt6-declarative
 _pkgver=6.12.0
 pkgver=${_pkgver/-/}
-pkgrel=1.1
+pkgrel=1.2
 arch=(x86_64)
 url='https://www.qt.io'
 license=(GPL-3.0-only
@@ -29,13 +29,16 @@ optdepends=('qt6-svg: for QtQuickVectorImage and svgtoqml')
 groups=(qt6)
 _pkgfn=${pkgname/6-/}
 source=(git+https://code.qt.io/qt/$_pkgfn#commit=4332fbbb4c340463dc8cee36dda0c85d932122d8
-        5f22a7236a5c1813b7efd49d860b451bdda73f07.patch)
+        5f22a7236a5c1813b7efd49d860b451bdda73f07.patch
+        8c92fe01338c76885f412a68fd39238147e21a81.patch)
 sha256sums=('2abdb7dc4300da123b730ff70e11f5c3b8643dc27ce9efcb906bd8670fbf17e7'
-            '34217cb28af69935865c697e399b00c434560725c54164c4d996728f66ceb34e')
+            '34217cb28af69935865c697e399b00c434560725c54164c4d996728f66ceb34e'
+            '43b24ea2bc2adcf3fddba61a0fa1cc77ed9da44517f2c0f0d889fc14ac2330b5')
 
 prepare() {
   cd $_pkgfn
   patch --fuzz=0 -Np1 -i "$srcdir/5f22a7236a5c1813b7efd49d860b451bdda73f07.patch"
+  patch --fuzz=0 -Np1 -i "$srcdir/8c92fe01338c76885f412a68fd39238147e21a81.patch"
 }
 
 build() {
