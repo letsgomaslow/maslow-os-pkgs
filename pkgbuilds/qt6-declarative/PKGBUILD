@@ -30,7 +30,7 @@ groups=(qt6)
 _pkgfn=${pkgname/6-/}
 source=(git+https://code.qt.io/qt/$_pkgfn#commit=4332fbbb4c340463dc8cee36dda0c85d932122d8
         5f22a7236a5c1813b7efd49d860b451bdda73f07.patch)
-sha256sums=('7d885b62ac323844249590fbcf73dad0b3d6c5c0e4adfbff645f4e314a8fa80b'
+sha256sums=('2abdb7dc4300da123b730ff70e11f5c3b8643dc27ce9efcb906bd8670fbf17e7'
             '34217cb28af69935865c697e399b00c434560725c54164c4d996728f66ceb34e')
 
 prepare() {
